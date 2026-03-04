@@ -153,13 +153,7 @@ const Navbar = () => {
                   >
                     Archivements
                   </Link>
-                  <Link
-                    href="/downloads"
-                    onClick={closeMenu}
-                    className="text-sm md:text-base font-medium hover:opacity-60 transition-opacity"
-                  >
-                    Downloads
-                  </Link>
+                 
 
                 </nav>
 
@@ -179,13 +173,7 @@ const Navbar = () => {
                   >
                     OurTeam
                   </Link>
-                  <Link
-                    href="/agenda"
-                    onClick={closeMenu}
-                    className="text-sm md:text-base font-medium hover:opacity-60 transition-opacity"
-                  >
-                    Agenda
-                  </Link>
+                  
                   <Link
                     href="/designer"
                     onClick={closeMenu}
@@ -209,13 +197,7 @@ const Navbar = () => {
                 >
                   Downloads
                 </Link>
-                <Link
-                  href="/careers"
-                  onClick={closeMenu}
-                  className="hover:opacity-60 transition-opacity"
-                >
-                  Careers
-                </Link>
+                
                 <Link
                   href="/contact-us"
                   onClick={closeMenu}

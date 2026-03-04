@@ -129,7 +129,6 @@ const ViewProduct = ({ product }: ViewProductProps) => {
 <div className="min-h-auto bg-white px-8 md:px-16 lg:px-15 font-gramatika">
   {[
     { id: "finishes", title: "Metal finishes" },
-    { id: "materials", title: "Other materials" },
     { id: "dimensions", title: "Dimensions" },
     { id: "downloads", title: "Downloads" },
   ].map((section) => (
@@ -225,7 +224,7 @@ const ViewProduct = ({ product }: ViewProductProps) => {
             >
               Weave {activeColorCategory === 'weave' ? '−' : '+'}
             </p>
-            <div className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 transition-all duration-500 ${
+            <div className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-16 mb-1 transition-all duration-500 ${
               activeColorCategory === 'weave' ? 'opacity-100 max-h-[1000px]' : 'opacity-0 max-h-0 overflow-hidden'
             }`}>
               {colors.filter(color => color.category === 'weave').map((color, index) => (
@@ -293,9 +292,9 @@ const ViewProduct = ({ product }: ViewProductProps) => {
         )}
         {section.id === "downloads" && (
           <div className="flex flex-col gap-4 text-lg">
-            <a className="underline hover:text-blue-600">Product Sheet PDF</a>
-            <a className="underline hover:text-blue-600">3D Model</a>
-            <a className="underline hover:text-blue-600">Technical Drawings</a>
+            <a className="underline hover:text-blue-600 cursor-pointer">Product Sheet PDF</a>
+            <a className="underline hover:text-blue-600 cursor-pointer">3D Model</a>
+            <a className="underline hover:text-blue-600 cursor-pointer">Technical Drawings</a>
           </div>
         )}
       </div>
