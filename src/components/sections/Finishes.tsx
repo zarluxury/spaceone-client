@@ -30,11 +30,11 @@ const Finishes = ({ finishName }: FinishesProps) => {
   const getAllFinishes = async (): Promise<Finish[]> => {
     try {
       const response = await fetch('http://localhost:5000/api/products/finishes');
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch finishes');
       }
-      
+
       const data = await response.json();
       return data;
     } catch (error) {
@@ -47,13 +47,13 @@ const Finishes = ({ finishName }: FinishesProps) => {
     try {
       const finishes = await getAllFinishes();
       const normalizedName = finishName.replace(/-/g, ' ').toLowerCase().trim();
-      
+
       // Try exact match first
       let foundFinish = finishes.find(finish => {
         const finishNormalizedName = finish.colorName.replace(/\s+/g, ' ').toLowerCase().trim();
         return finishNormalizedName === normalizedName;
       });
-      
+
       // If no exact match, try partial match
       if (!foundFinish) {
         const searchTerms = normalizedName.split(' ');
@@ -62,7 +62,7 @@ const Finishes = ({ finishName }: FinishesProps) => {
           return searchTerms.every(term => finishNormalizedName.includes(term));
         });
       }
-      
+
       return foundFinish || null;
     } catch (error) {
       console.error('Error finding finish by name:', error);
@@ -73,8 +73,8 @@ const Finishes = ({ finishName }: FinishesProps) => {
   const getRelatedFinishes = async (currentFinish: Finish): Promise<Finish[]> => {
     try {
       const finishes = await getAllFinishes();
-      return finishes.filter(finish => 
-        finish.productId !== currentFinish.productId && 
+      return finishes.filter(finish =>
+        finish.productId !== currentFinish.productId &&
         finish.type === currentFinish.type
       ).slice(0, 3);
     } catch (error) {
@@ -134,12 +134,12 @@ const Finishes = ({ finishName }: FinishesProps) => {
     }
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     window.scrollTo({
-      top:0,
-      behavior:'smooth'
+      top: 0,
+      behavior: 'smooth'
     })
-  },[])
+  }, [])
 
   if (loading) {
     return (
@@ -158,7 +158,7 @@ const Finishes = ({ finishName }: FinishesProps) => {
           Metal Finishes
         </h1>
         <p className="max-w-3xl mx-auto text-gray-700 text-lg font-gramatika tracking-wide">
-          Explore our complete collection of premium metal finishes. Each finish is carefully crafted 
+          Explore our complete collection of premium metal finishes. Each finish is carefully crafted
           to provide exceptional quality and aesthetic appeal for your design projects.
         </p>
       </div>
@@ -172,20 +172,25 @@ const Finishes = ({ finishName }: FinishesProps) => {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               {typeFinishes.map((finish, index) => (
-                <Link 
-                  href={`/finishes/${finish.colorName.replace(/\s+/g, '-')}`} 
+                <Link
+                  href={`/finishes/${finish.colorName.replace(/\s+/g, '-')}`}
                   key={`${finish.productId}-${finish.colorName}-${index}`}
                   className="group cursor-pointer"
                 >
-                  <div className="relative aspect-square overflow-hidden rounded-lg mb-4 group">
-  <Image
-    src={finish.colorImage}
-    alt={finish.colorName}
-    fill
-    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-    className="object-cover transition-transform duration-500 group-hover:scale-[5]"
-  />
-</div>
+                  <div className="w-full mb-4">
+                    <Image
+                      src={finish.colorImage}
+                      alt={finish.colorName}
+                      width={500}
+                      height={500}
+                      className="w-full h-auto object-contain rounded-lg"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDownload(finish.colorImage, finish.colorName);
+                      }}
+                    />
+                  </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-gramatika text-gray-900 group-hover:text-blue-600 transition-colors">

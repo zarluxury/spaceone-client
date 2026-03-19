@@ -252,89 +252,51 @@ console.log('Product loaded:', data)
       >
         {/* FINISHES GRID */}
         {section.id === "finishes" && (
-          <>
-            {/* Classic */}
-            <p 
-              className={`text-gray-500 mb-1 cursor-pointer hover:text-gray-600 transition-colors ${
-                activeColorCategory === 'classic' ? 'text-gray-900 font-semibold' : ''
-              }`}
-              onClick={() => setActiveColorCategory(activeColorCategory === 'classic' ? '' : 'classic')}
-            >
-              Classic {activeColorCategory === 'classic' ? '−' : '+'}
-            </p>
-            <div className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-16 mb-1 transition-all duration-500 ${
-              activeColorCategory === 'classic' ? 'opacity-100 max-h-[1000px]' : 'opacity-0 max-h-0 overflow-hidden mb-0'
-            }`}>
-              {colors.filter((color: any) => color.category === 'classic').map((color: any, index: number) => (
-                <Link href={`/finishes/${color.name.replace(/\s+/g, '-')}`} key={color.name} className="group cursor-pointer">
-                  <div className="relative w-full aspect-square overflow-hidden">
-                    <Image
-                      src={color.image}
-                      alt=""
-                      fill
-                      sizes="20vw"
-                      className="object-cover group-hover:scale-105 transition duration-500"
-                    />
+          <div className="space-y-6">
+            {/* Get unique finish types from product data */}
+            {product.finishes?.map((finish: Finish) => {
+              const finishType = finish.type?.toLowerCase();
+              const typeColors = colors.filter((color: any) => color.category === finishType);
+              
+              if (typeColors.length === 0) return null;
+              
+              return (
+                <div key={finishType} className="border-b border-gray-100 pb-6 last:border-0">
+                  <p 
+                    className={`text-gray-700 mb-4 cursor-pointer hover:text-gray-900 transition-colors capitalize text-lg font-medium ${
+                      activeColorCategory === finishType ? 'text-gray-900 font-semibold' : ''
+                    }`}
+                    onClick={() => setActiveColorCategory(activeColorCategory === finishType ? '' : finishType)}
+                  >
+                    {finishType} {activeColorCategory === finishType ? '−' : '+'}
+                    <span className="text-sm text-gray-500 font-normal ml-2">({typeColors.length} colors)</span>
+                  </p>
+                  <div className={`grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4 transition-all duration-500 ${
+                    activeColorCategory === finishType ? 'opacity-100 max-h-screen' : 'opacity-0 max-h-0 overflow-hidden'
+                  }`}>
+                    {typeColors.map((color: any, index: number) => (
+                      <Link href={`/finishes/${color.name.replace(/\s+/g, '-')}`} key={`${color.name}-${index}`} className="group cursor-pointer">
+                        <div className="relative w-full aspect-square overflow-hidden rounded-lg border border-gray-200 hover:border-gray-400 transition-colors">
+                          <div className="relative w-full h-full overflow-hidden group">
+ <Image
+  src={color.image}
+  alt={color.name}
+  fill
+  sizes="15vw"
+  className="object-cover scale-[1.4] object-center"
+/>
+</div>
+                        </div>
+                        <p className="mt-2 text-xs text-gray-600 hover:text-blue-600 transition-colors capitalize text-center leading-tight">
+                          {color.name}
+                        </p>
+                      </Link>
+                    ))}
                   </div>
-                  <p className="mt-3 text-sm hover:text-blue-600 transition-colors">{color.name}</p>
-                </Link>
-              ))}
-            </div>
-            {/* Plate */}
-            <p 
-              className={`text-gray-500 mb-1 cursor-pointer hover:text-gray-600 transition-colors ${
-                activeColorCategory === 'plate' ? 'text-gray-900 font-semibold' : ''
-              }`}
-              onClick={() => setActiveColorCategory(activeColorCategory === 'plate' ? '' : 'plate')}
-            >
-              Plate {activeColorCategory === 'plate' ? '−' : '+'}
-            </p>
-            <div className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-16 mb-1 transition-all duration-500 ${
-              activeColorCategory === 'plate' ? 'opacity-100 max-h-[1000px]' : 'opacity-0 max-h-0 overflow-hidden mb-0'
-            }`}>
-              {colors.filter((color: any) => color.category === 'plate').map((color: any, index: number) => (
-                <Link href={`/finishes/${color.name.replace(/\s+/g, '-')}`} key={color.name} className="group cursor-pointer">
-                  <div className="relative w-full aspect-square overflow-hidden">
-                    <Image
-                      src={color.image}
-                      alt=""
-                      fill
-                      sizes="20vw"
-                      className="object-cover group-hover:scale-105 transition duration-500"
-                    />
-                  </div>
-                  <p className="mt-3 text-sm hover:text-blue-600 transition-colors">{color.name}</p>
-                </Link>
-              ))}
-            </div>
-            {/* Weave */}
-            <p 
-              className={`text-gray-500 mb-1 cursor-pointer hover:text-gray-600 transition-colors ${
-                activeColorCategory === 'weave' ? 'text-gray-900 font-semibold' : ''
-              }`}
-              onClick={() => setActiveColorCategory(activeColorCategory === 'weave' ? '' : 'weave')}
-            >
-              Weave {activeColorCategory === 'weave' ? '−' : '+'}
-            </p>
-            <div className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-16 mb-1 transition-all duration-500 ${
-              activeColorCategory === 'weave' ? 'opacity-100 max-h-[1000px]' : 'opacity-0 max-h-0 overflow-hidden'
-            }`}>
-              {colors.filter((color: any) => color.category === 'weave').map((color: any, index: number) => (
-                <Link href={`/finishes/${color.name.replace(/\s+/g, '-')}`} key={color.name} className="group cursor-pointer">
-                  <div className="relative w-full aspect-square overflow-hidden">
-                    <Image
-                      src={color.image}
-                      alt=""
-                      fill
-                      sizes="20vw"
-                      className="object-cover group-hover:scale-105 transition duration-500"
-                    />
-                  </div>
-                  <p className="mt-3 text-sm hover:text-blue-600 transition-colors">{color.name}</p>
-                </Link>
-              ))}
-            </div>
-          </>
+                </div>
+              );
+            })}
+          </div>
         )}
         {section.id === "materials" && (
           <p className="text-gray-700 text-lg">
