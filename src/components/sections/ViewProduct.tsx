@@ -61,12 +61,25 @@ const ViewProduct = ({ slug }: ViewProductProps) => {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [openSection, setOpenSection] = useState("")
   const [activeColorCategory, setActiveColorCategory] = useState("classic")
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([])
 
+  const fetchRelatedProducts = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/products`)
+      if (response.ok) {
+        const allProducts = await response.json()
+        const filtered = allProducts.filter((p: any) => p.slug !== product.slug && p.category === product.category)
+        setRelatedProducts(filtered.slice(0, 3))
+      }
+    } catch (err) {
+      // Error handling for production
+    }
+  }
 
   const fetchProduct = async () => {
     try {
       setLoading(true)
-     const response = await fetch(`http://localhost:5000/api/products/${slug}`)
+     const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/products/${slug}`)
 
 if (!response.ok) {
   throw new Error('Product not found')
@@ -74,7 +87,6 @@ if (!response.ok) {
 
 const data = await response.json()
 setProduct(data)
-console.log('Product loaded:', data)
 
       
     } catch (err) {
@@ -90,6 +102,12 @@ console.log('Product loaded:', data)
     }
 
   }, [slug])
+
+  useEffect(() => {
+    if (product) {
+      fetchRelatedProducts()
+    }
+  }, [product])
 
   if (loading) {
     return (
@@ -275,17 +293,17 @@ console.log('Product loaded:', data)
                     activeColorCategory === finishType ? 'opacity-100 max-h-screen' : 'opacity-0 max-h-0 overflow-hidden'
                   }`}>
                     {typeColors.map((color: any, index: number) => (
-                      <Link href={`/finishes/${color.name.replace(/\s+/g, '-')}`} key={`${color.name}-${index}`} className="group cursor-pointer">
+                      <Link href={`/finishes/${product._id}/${color.name.replace(/\s+/g, '-')}`} key={`${color.name}-${index}`} className="group cursor-pointer">
                         <div className="relative w-full aspect-square overflow-hidden rounded-lg border border-gray-200 hover:border-gray-400 transition-colors">
                           <div className="relative w-full h-full overflow-hidden group">
- <Image
-  src={color.image}
-  alt={color.name}
-  fill
-  sizes="15vw"
-  className="object-cover scale-[1.4] object-center"
-/>
-</div>
+                            <Image
+                              src={color.image}
+                              alt={color.name}
+                              fill
+                              sizes="15vw"
+                              className="object-cover scale-[1.4] object-center"
+                            />
+                          </div>
                         </div>
                         <p className="mt-2 text-xs text-gray-600 hover:text-blue-600 transition-colors capitalize text-center leading-tight">
                           {color.name}
@@ -369,23 +387,23 @@ console.log('Product loaded:', data)
   <h2 className="text-4xl font-gramatika font-thin text-center py-16">
     Affinities with this product
   </h2>
-  <div className="grid grid-cols-1 md:grid-cols-3 w-full h-[80vh]">
-    {suggestProduct.map((n: any, index: number) => (
-      <Link href={`/finishes/${n.name}`} key={index}>
-      <div key={index} className="relative w-full h-full overflow-hidden group cursor-pointer">
-        <Image
-          src={n.src}
-          alt={`Affinity ${index + 1}`}
-          fill
-          sizes="(max-width: 768px) 100vw, 33vw"
-          priority
-          className="object-cover transition-transform duration-700 group-hover:scale-105"
-        />
-        <h2 className="absolute inset-0 flex items-center justify-center text-white font-light font-gramatika text-[2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-  {n.name}
-</h2>
-
-      </div>
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 w-full h-[80vh]">
+    {/* Related products only - exclude current product */}
+    {relatedProducts.map((relatedProduct: any, index: number) => (
+      <Link href={`/productview/${relatedProduct.slug}`} key={index}>
+        <div className="relative w-full h-full overflow-hidden group cursor-pointer">
+          <Image
+            src={relatedProduct.heroImage}
+            alt={relatedProduct.name}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            priority
+            className="object-fill transition-transform duration-700 group-hover:scale-105"
+          />
+          <h2 className="absolute inset-0 flex items-center justify-center text-white font-light font-gramatika text-[2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            {relatedProduct.name}
+          </h2>
+        </div>
       </Link>
     ))}
   </div>

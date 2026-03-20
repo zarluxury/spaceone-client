@@ -264,7 +264,7 @@ const Navbar = () => {
                 </button>
                 <span>,</span>
                 <button className="hover:opacity-60 transition-opacity cursor-pointer">
-                  IT
+                  IN
                 </button>
               </div>
             </div>

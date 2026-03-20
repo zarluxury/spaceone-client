@@ -18,18 +18,21 @@ interface Finish {
 
 interface FinishesProps {
   finishName?: string
+  productId?: string
 }
 
-const Finishes = ({ finishName }: FinishesProps) => {
+const Finishes = ({ finishName, productId }: FinishesProps) => {
   const [allFinishes, setAllFinishes] = useState<Finish[]>([]);
   const [selectedFinish, setSelectedFinish] = useState<Finish | null>(null);
   const [relatedFinishes, setRelatedFinishes] = useState<Finish[]>([]);
   const [loading, setLoading] = useState(true);
+  const [productInfo, setProductInfo] = useState<any>(null);
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
 
   // API functions
   const getAllFinishes = async (): Promise<Finish[]> => {
     try {
-      const response = await fetch('http://localhost:5000/api/products/finishes');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/products/finishes`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch finishes');
@@ -38,7 +41,25 @@ const Finishes = ({ finishName }: FinishesProps) => {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error fetching finishes:', error);
+      console.error(error);
+      throw error;
+    }
+  };
+
+  const getFinishById = async (productId: string, colorName?: string): Promise<any> => {
+    try {
+      // The backend route expects both id and name parameters
+      const nameParam = colorName || 'dummy';
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/products/finishes/${productId}/${nameParam}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch product finishes');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(error);
       throw error;
     }
   };
@@ -65,7 +86,6 @@ const Finishes = ({ finishName }: FinishesProps) => {
 
       return foundFinish || null;
     } catch (error) {
-      console.error('Error finding finish by name:', error);
       return null;
     }
   };
@@ -78,7 +98,47 @@ const Finishes = ({ finishName }: FinishesProps) => {
         finish.type === currentFinish.type
       ).slice(0, 3);
     } catch (error) {
-      console.error('Error getting related finishes:', error);
+      return [];
+    }
+  };
+
+  const getRelatedProducts = async (currentProductId: string, finishTypes: string[]): Promise<any[]> => {
+    try {
+      const allFinishes = await getAllFinishes();
+      
+      // Get unique product IDs that have similar finish types
+      const relatedProductIds = new Set();
+      allFinishes.forEach(finish => {
+        if (finish.productId !== currentProductId && finishTypes.includes(finish.type)) {
+          relatedProductIds.add(finish.productId);
+        }
+      });
+      
+      // Group finishes by product for related products
+      const relatedProducts: any[] = [];
+      relatedProductIds.forEach(productId => {
+        const productFinishes = allFinishes.filter(finish => finish.productId === productId);
+        if (productFinishes.length > 0) {
+          const uniqueFinishTypes = [...new Set(productFinishes.map(f => f.type))];
+          const matchingTypes = uniqueFinishTypes.filter(type => finishTypes.includes(type));
+          
+          if (matchingTypes.length > 0) {
+            relatedProducts.push({
+              productId: productFinishes[0].productId,
+              productName: productFinishes[0].productName,
+              productSlug: productFinishes[0].productSlug,
+              matchingFinishTypes: matchingTypes,
+              finishes: productFinishes.slice(0, 8), // Limit to 8 finishes for display
+              matchCount: matchingTypes.length
+            });
+          }
+        }
+      });
+      
+      // Sort by number of matching finish types (most matches first)
+      return relatedProducts.sort((a, b) => b.matchCount - a.matchCount).slice(0, 3); // Show max 3 related products
+    } catch (error) {
+      console.error('Error getting related products:', error);
       return [];
     }
   };
@@ -86,17 +146,70 @@ const Finishes = ({ finishName }: FinishesProps) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const finishes = await getAllFinishes();
+        let finishes: Finish[] = [];
+        
+        // If productId is provided, try the new API first
+        if (productId) {
+          try {
+            const productFinishes = await getFinishById(productId, finishName);
+            if (productFinishes && productFinishes.finishes) {
+              finishes = productFinishes.finishes;
+              setProductInfo({
+                name: productFinishes.productName,
+                slug: productFinishes.productSlug,
+                id: productFinishes.productId
+              });
+              
+              // Get unique finish types from current product
+              const uniqueFinishTypes = [...new Set(finishes.map(f => f.type))];
+              
+              // Fetch related products with similar finish types
+              const related = await getRelatedProducts(productId, uniqueFinishTypes);
+              setRelatedProducts(related);
+            }
+          } catch (error) {
+            // If product-specific API fails, fall back to all finishes and filter
+            console.log('Product-specific API failed, falling back to all finishes');
+            const allFinishes = await getAllFinishes();
+            finishes = allFinishes.filter(finish => finish.productId === productId);
+            if (finishes.length > 0) {
+              setProductInfo({
+                name: finishes[0].productName,
+                slug: finishes[0].productSlug,
+                id: finishes[0].productId
+              });
+              
+              // Get unique finish types from current product
+              const uniqueFinishTypes = [...new Set(finishes.map(f => f.type))];
+              
+              // Fetch related products with similar finish types
+              const related = await getRelatedProducts(productId, uniqueFinishTypes);
+              setRelatedProducts(related);
+            }
+          }
+        } else {
+          // Otherwise, get all finishes
+          finishes = await getAllFinishes();
+          setProductInfo(null);
+          setRelatedProducts([]);
+        }
+        
         setAllFinishes(finishes);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        // Final fallback - try to get all finishes
+        try {
+          const allFinishes = await getAllFinishes();
+          setAllFinishes(allFinishes);
+        } catch (finalError) {
+          console.log('All API attempts failed');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [finishName]);
+  }, [finishName, productId]);
 
   // Generate display images from all finishes
   const displayImages = allFinishes.map(finish => ({
@@ -130,7 +243,6 @@ const Finishes = ({ finishName }: FinishesProps) => {
       a.remove();
       window.URL.revokeObjectURL(blobUrl);
     } catch (err) {
-      console.error("Download failed", err);
     }
   };
 
@@ -155,12 +267,24 @@ const Finishes = ({ finishName }: FinishesProps) => {
       {/* Header */}
       <div className="text-center py-16 px-6">
         <h1 className="text-5xl font-gramatika text-gray-900 mb-6">
-          Metal Finishes
+          {productInfo ? `${productInfo.name} - Finishes` : 'Metal Finishes'}
         </h1>
         <p className="max-w-3xl mx-auto text-gray-700 text-lg font-gramatika tracking-wide">
-          Explore our complete collection of premium metal finishes. Each finish is carefully crafted
-          to provide exceptional quality and aesthetic appeal for your design projects.
+          {productInfo 
+            ? `Explore the available finishes for ${productInfo.name}. Each finish is carefully crafted to provide exceptional quality and aesthetic appeal.`
+            : 'Explore our complete collection of premium metal finishes. Each finish is carefully crafted to provide exceptional quality and aesthetic appeal for your design projects.'
+          }
         </p>
+        {productInfo && (
+          <div className="mt-6">
+            <Link 
+              href={`/productview/${productInfo.slug}`}
+              className="inline-block px-6 py-3 bg-gray-900 text-white font-gramatika rounded-lg hover:bg-gray-800 transition-colors"
+            >
+              Back to Product
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Finishes Grid by Type */}
@@ -218,6 +342,65 @@ const Finishes = ({ finishName }: FinishesProps) => {
           </div>
         ))}
       </div>
+
+      {/* Related Products Section */}
+      {productInfo && relatedProducts.length > 0 && (
+        <div className="px-6 md:px-16 pb-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-3xl font-gramatika text-gray-800 mb-12 text-center">
+              Related Products with Similar Finishes
+            </h2>
+            <div className="space-y-16">
+              {relatedProducts.map((relatedProduct) => (
+                <div key={relatedProduct.productId} className="bg-white rounded-lg p-8 shadow-sm">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h3 className="text-2xl font-gramatika text-gray-900 mb-2">
+                        {relatedProduct.productName}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Matching finish types: {relatedProduct.matchingFinishTypes.join(', ')}
+                      </p>
+                    </div>
+                    <Link
+                      href={`/finishes/${relatedProduct.productId}/${relatedProduct.finishes[0]?.colorName.replace(/\s+/g, '-') || 'finish'}`}
+                      className="px-6 py-3 bg-blue-600 text-white font-gramatika rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      View All Finishes
+                    </Link>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                    {relatedProduct.finishes.map((finish: Finish, index: number) => (
+                      <Link
+                        href={`/finishes/${relatedProduct.productId}/${finish.colorName.replace(/\s+/g, '-')}`}
+                        key={`${relatedProduct.productId}-${finish.colorName}-${index}`}
+                        className="group cursor-pointer"
+                      >
+                        <div className="relative w-full aspect-square overflow-hidden rounded-lg border border-gray-200 hover:border-gray-400 transition-colors">
+                          <Image
+                            src={finish.colorImage}
+                            alt={finish.colorName}
+                            fill
+                            sizes="12vw"
+                            className="object-cover scale-[1.2] object-center"
+                          />
+                        </div>
+                        <p className="mt-2 text-xs text-gray-600 hover:text-blue-600 transition-colors capitalize text-center leading-tight">
+                          {finish.colorName}
+                        </p>
+                        <p className="text-xs text-gray-500 text-center">
+                          {finish.type}
+                        </p>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
