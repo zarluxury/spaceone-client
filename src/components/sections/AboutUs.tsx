@@ -13,11 +13,11 @@ const aboutData = {
   content: {
     mission: {
       title: "Our Mission",
-      description: "At SpaceOne, we are dedicated to creating exceptional surface solutions that transform spaces and inspire creativity. Our commitment to innovation and quality drives us to push the boundaries of what's possible in surface design."
+      description: "At SpaceOne, our mission is to be a leading force in premium veneer surfacing, creating high-end solutions that seamlessly blend masterful craftsmanship with cutting-edge materials. We are driven by a deep respect for design, detail, and durability, working closely with architects and designers to transform their most ambitious ideas into refined, enduring surfaces. Every SpaceOne creation is guided by precision, innovation, and an uncompromising commitment to quality, elevating interiors into meaningful, expressive spaces."
     },
     vision: {
       title: "Our Vision",
-      description: "To be the global leader in premium surface solutions, setting new standards for design excellence, sustainability, and customer satisfaction in every project we undertake."
+      description: "Our vision is to be globally recognised as the definitive authority in luxury architectural surfaces. We aspire to shape spaces that go beyond aesthetics, spaces that evoke emotion, inspire creativity, and leave a lasting impression. By continuously pushing the boundaries of material innovation and design excellence, SpaceOne aims to set new benchmarks for how surfaces define and elevate modern architecture across the world."
     },
     values: {
       title: "Our Values",
@@ -39,38 +39,67 @@ const aboutData = {
           description: "Building lasting relationships through exceptional service and support"
         }
       ]
+    },
+    whyChooseUs: {
+      title: "Why Choose Us",
+      items: [
+        {
+          title: "WIDE RANGE",
+          description: "Our veneer collection boasts an extensive variety of colours, designs, species, and sizes, including both standard 8×4 and spacious 10×4 dimensions, giving you an abundant choice and design freedom."
+        },
+        {
+          title: "Unparalleled Quality & Durability",
+          description: "We use premium paper veneers paired with superior backing materials, ensuring high visual impact and long-lasting performance."
+        },
+        {
+          title: "Cutting-Edge Design",
+          description: "Choose from contemporary patterns to timeless classics, designed to suit diverse aesthetic preferences and elevate interiors."
+        },
+        {
+          title: "Tailored Customization",
+          description: "From marquetry to ombré finishes and digital printing, we offer flexible customisation to meet your exact design requirements."
+        },
+        {
+          title: "Expert Craftsmanship",
+          description: "Every sheet is hand-finished by skilled artisans, reflecting exceptional detail and precision in every layer."
+        },
+        {
+          title: "Exceptional Customer Support",
+          description: "Experience seamless service from consultation to delivery, with a dedicated team to assist you throughout."
+        }
+      ]
     }
   }
 }
 
 const AboutUs = () => {
 
-const titleRef = useRef<HTMLHeadingElement>(null)
-const subtitleRef = useRef<HTMLParagraphElement>(null)
+  const titleRef = useRef<HTMLHeadingElement>(null)
+  const subtitleRef = useRef<HTMLParagraphElement>(null)
 
-    useEffect(()=>{
+  useEffect(()=>{
     // Reset animations when component mounts
     gsap.set(titleRef.current, { y: -100, opacity: 0 })
     gsap.set(subtitleRef.current, { y: 100, opacity: 0 })
 
     // Animate in
     gsap.to(titleRef.current,{
-        y:0,
-        opacity:1,
-        duration:1.5,
-        ease:"power2.out"
+      y:0,
+      opacity:1,
+      duration:1.5,
+      ease:"power2.out"
     })
     
     gsap.to(subtitleRef.current,{
-        y:0,
-        opacity:1,
-        duration:1.5,
-        ease:"power2.out",
-        delay:0.3
+      y:0,
+      opacity:1,
+      duration:1.5,
+      ease:"power2.out",
+      delay:0.3
     })
 
 
-}, [])
+  }, [])
 
 
   return (
@@ -126,6 +155,25 @@ const subtitleRef = useRef<HTMLParagraphElement>(null)
                   </h3>
                   <p className="text-gray-600 leading-relaxed">
                     {value.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Why Choose Us Section */}
+          <div className="mb-20">
+            <h2 className="text-4xl font-gramatika font-light text-gray-900 mb-12 text-center">
+              {aboutData.content.whyChooseUs.title}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {aboutData.content.whyChooseUs.items.map((item, index) => (
+                <div key={index} className="p-8 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <h3 className="text-xl font-gramatika font-semibold text-gray-900 mb-4">
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    {item.description}
                   </p>
                 </div>
               ))}

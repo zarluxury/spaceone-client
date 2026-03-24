@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 import { Footer } from "../ui/Footer";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
 const contactData = {
   title: "Headquarters",
   address: "120/A, Bombay Talkies compound, Dadiseth Lane,\nOff S.V. Road, Opp. Malad Sahakari Bank,\nMalad West, Mumbai 400064. India",
@@ -14,11 +16,82 @@ const contactData = {
   }
 };
 
+interface FormData {
+  [key: string]: string | boolean;
+}
+
 const ContactUs = () => {
-  const [form, setForm] = useState({});
+  const [form, setForm] = useState<FormData>({});
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState<'success' | 'error' | ''>('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const target = e.target;
+    const value = target.type === 'checkbox' ? (target as HTMLInputElement).checked : target.value;
+    setForm({ ...form, [target.name]: value });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const formData = new FormData();
+      
+      // Add all form fields
+      Object.keys(form).forEach(key => {
+        const value = form[key];
+        if (typeof value === 'boolean') {
+          formData.append(key, value.toString());
+        } else {
+          formData.append(key, value);
+        }
+      });
+      
+      // Add file if selected
+      if (file) {
+        formData.append('attachment', file);
+      }
+
+      const response = await fetch(`${API_URL}/api/contact`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessage('Your message has been sent successfully! We will contact you soon.');
+        setMessageType('success');
+        // Reset form
+        setForm({});
+        setFile(null);
+        // Reset file input
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+        // Reset checkboxes
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>;
+        checkboxes.forEach(checkbox => checkbox.checked = false);
+      } else {
+        setMessage(data.message || 'Failed to send message. Please try again.');
+        setMessageType('error');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setMessage('Failed to send message. Please check your connection and try again.');
+      setMessageType('error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -95,25 +168,12 @@ const ContactUs = () => {
             </p>
 
             {/* Form */}
-            <form className="space-y-10">
+            <form className="space-y-10" onSubmit={handleSubmit}>
               {/* ===== 2 column grid ===== */}
               <div className="grid md:grid-cols-2 gap-x-16 gap-y-3">
-                {[
-                  "Name",
-                  "Surname",
-                  "Company",
-                  "Phone",
-                  "Jobs",
-                  "",
-                  "Address",
-                  "",
-                  "City",
-                  "Zip code",
-                  "Country",
-                  "Email",
-                ].map((label, i) =>
+                {["Name", "Surname", "Company", "Phone", "Jobs", "", "Address", "", "City", "Zip code", "Country", "Email"].map((label, i) =>
                   label ? (
-                    <Input key={i} label={label} onChange={handleChange} />
+                    <Input key={i} label={label} onChange={handleChange} value={(form[label.toLowerCase()] as string) || ''} />
                   ) : (
                     <div key={i}></div>
                   )
@@ -126,37 +186,47 @@ const ContactUs = () => {
                   name="message"
                   placeholder="Message*"
                   rows={5}
+                  value={(form.message as string) || ''}
                   onChange={handleChange}
                   className="w-full border border-black p-4 outline-none resize-none text-sm"
+                  required
                 />
               </div>
 
               {/* Attachment */}
               <div className="flex items-center justify-between border-b border-black pb-3">
                 <label className="text-sm text-gray-500">
-                  Attachment (doc, pdf, png, jpg) Max 5MB
+                  {file ? file.name : 'Attachment (doc, pdf, png, jpg) Max 5MB'}
                 </label>
 
                 <label className="cursor-pointer border border-black rounded-full w-8 h-8 flex items-center justify-center text-lg">
                   +
-                  <input type="file" className="hidden" />
+                  <input type="file" className="hidden" onChange={handleFileChange} accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" />
                 </label>
               </div>
 
               {/* Checkboxes */}
               <div className="space-y-4 text-sm text-gray-600">
-                <Checkbox text="I declare that I have read the Privacy Policy." />
-                <Checkbox text="I declare that I give my consent for newsletter subscription and for receiving marketing communications in accordance with the Privacy Policy." />
-                <Checkbox text="I declare that I give my consent for profiling activities, analysis of my preferences, and for the provision of a personalized service in accordance with the Privacy Policy." />
+                <Checkbox text="I declare that I have read the Privacy Policy." name="privacyPolicy" onChange={handleChange} required />
+                <Checkbox text="I declare that I give my consent for newsletter subscription and for receiving marketing communications in accordance with the Privacy Policy." name="newsletter" onChange={handleChange} />
+                <Checkbox text="I declare that I give my consent for profiling activities, analysis of my preferences, and for the provision of a personalized service in accordance with the Privacy Policy." name="profiling" onChange={handleChange} />
               </div>
+
+              {/* Message Display */}
+              {message && (
+                <div className={`text-center p-4 rounded-lg ${messageType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                  {message}
+                </div>
+              )}
 
               {/* Submit */}
               <div className="flex justify-center pt-8">
                 <button
                   type="submit"
-                  className="px-10 py-3 border border-black rounded-full text-sm hover:bg-black hover:text-white transition-all"
+                  disabled={loading}
+                  className="px-10 py-3 border border-black rounded-full text-sm hover:bg-black hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  SEND REQUEST
+                  {loading ? 'SENDING...' : 'SEND REQUEST'}
                 </button>
               </div>
             </form>
@@ -174,16 +244,20 @@ const ContactUs = () => {
 interface InputProps {
   label: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  value: string;
 }
 
-function Input({ label, onChange }: InputProps) {
+function Input({ label, onChange, value }: InputProps) {
   return (
     <div className="flex flex-col">
       <input
         name={label.toLowerCase()}
         placeholder={`${label}*`}
+        value={value}
         onChange={onChange}
         className="border-b border-black outline-none py-2 text-sm bg-transparent"
+        required={label === 'Name' || label === 'Surname' || label === 'Email'}
+        type={label === 'Email' ? 'email' : 'text'}
       />
     </div>
   );
@@ -191,12 +265,32 @@ function Input({ label, onChange }: InputProps) {
 
 interface CheckboxProps {
   text: string;
+  name: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  required?: boolean;
 }
 
-function Checkbox({ text }: CheckboxProps) {
+function Checkbox({ text, name, onChange, required }: CheckboxProps) {
   return (
     <label className="flex items-start gap-3 cursor-pointer">
-      <input type="checkbox" className="mt-1" />
+      <input 
+        type="checkbox" 
+        name={name}
+        onChange={(e) => {
+          const target = e.target;
+          onChange({
+            ...e,
+            target: {
+              ...target,
+              name: target.name,
+              value: target.checked.toString(),
+              checked: target.checked
+            }
+          });
+        }}
+        className="mt-1"
+        required={required}
+      />
       <span>{text}</span>
     </label>
   );

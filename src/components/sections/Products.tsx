@@ -70,7 +70,7 @@ const Products = (props: ProductsProps) => {
   }, [])
 
   const {
-    categories = ['Surfaces'],
+    categories = [`Our Product's`],
   } = props;
 
   return (
@@ -81,7 +81,7 @@ const Products = (props: ProductsProps) => {
         {categories.map((cat, idx) => (
           <button
             key={cat}
-            className={`text-1xl md:text-3xl lg:text-6xl py-2 font-light  transition-colors duration-300 tracking-wide cursor-pointer  ${
+            className={`text-1xl md:text-3xl lg:text-5xl py-2 font-light  transition-colors duration-300 tracking-wide cursor-pointer  ${
               idx === 0 ? 'text-[#1a1a1a]' : 'text-[#b0b0b0] hover:text-[#666]'
             }`}
           >

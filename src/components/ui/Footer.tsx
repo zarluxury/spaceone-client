@@ -7,13 +7,8 @@ const footerData = {
     links: [
       { name: "Products", href: "/products" },
       { name: "Projects", href: "/projects" },
-      { name: "Materioteca", href: "/materioteca" },
-      { name: "Cultura", href: "/cultura" },
-      { name: "Be inspired", href: "/be-inspired" },
       { name: "About", href: "/about-us" },
-      { name: "Dealers", href: "/dealers" },
-      { name: "Agenda", href: "/agenda" },
-      { name: "Designer", href: "/designer" }
+      { name: "Contact", href: "/contact-us" },
     ]
   },
   newsletter: {

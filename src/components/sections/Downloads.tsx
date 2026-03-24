@@ -1,7 +1,7 @@
 'use client'
 
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import img_1 from "../../../public//images/product/Classic/camelcoat-03.jpg"
 import img_2 from "../../../public//images/product/Classic/dove-01.jpg"
 import img_3 from "../../../public//images/product/Classic/verona-02.jpg"
@@ -13,40 +13,85 @@ type DownloadItem = {
   category: string
 }
 
-const downloads: DownloadItem[] = [
-  {
-    title: "Iridium Brochure",
-    image: img_1.src,
-    pdf: "https://decastelli.com/wp-content/uploads/2025/04/DC-IridiumCollection.1.4_DEF.pdf",
-    category: "Cataloghi",
-  },
-  {
-    title: "Metal Affinities Catalogue",
-    image: img_2.src,
-    pdf: "https://decastelli.com/wp-content/uploads/2024/08/De-Castelli-Catalogue-Metal-Affinities-2024.pdf",
-    category: "Cataloghi",
-  },
-  {
-    title: "Scenari 01",
-    image: img_3.src,
-    pdf: "https://decastelli.com/wp-content/uploads/2024/08/De-Castelli_Metal-affinities_Scenari-1.pdf",
-    category: "Cataloghi",
-  },
-]
+type BackendDownload = {
+  title: string
+  file: string
+  _id: string
+}
+
 
 export default function Downloads() {
-  const [active, setActive] = useState("Cataloghi")
+  const [active, setActive] = useState("Download PDF's")
+  const [downloads, setDownloads] = useState<DownloadItem[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const categories = [
-    "Cataloghi",
-    "Quaderni",
-    "Dispense",
-    "Schede Tecniche",
-    "2D / 3D",
-    "Assembly instructions",
-  ]
+  // Get unique categories from downloads data
+  const categories = Array.from(new Set(downloads.map(d => d.category)))
+  
+  // Update active category when downloads change
+  useEffect(() => {
+    if (categories.length > 0 && !categories.includes(active)) {
+      setActive(categories[0])
+    }
+  }, [categories, active])
+
+  const fetchProductData = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/products`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch products')
+      }
+      
+      const data = await response.json()
+      
+      // Extract downloads from all products
+      if (data && data.length > 0) {
+        const allDownloads: DownloadItem[] = []
+        
+        data.forEach((product: any) => {
+          if (product.downloads && product.downloads.length > 0) {
+            product.downloads.forEach((download: BackendDownload, index: number) => {
+              allDownloads.push({
+                title: download.title,
+                image: [img_1.src, img_2.src, img_3.src][allDownloads.length % 3], // Cycle through default images
+                pdf: download.file,
+                category: "Download PDF's"
+              })
+            })
+          }
+        })
+        
+        if (allDownloads.length > 0) {
+          setDownloads(allDownloads)
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching product data:', err)
+      // Set empty array if API fails to remove dummy data
+      setDownloads([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchProductData()
+  }, [])
 
   const filtered = downloads.filter(d => d.category === active)
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white px-8 lg:px-16 py-25 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600">Loading downloads...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>

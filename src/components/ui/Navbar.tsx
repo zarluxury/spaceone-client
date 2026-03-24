@@ -67,12 +67,12 @@ const Navbar = () => {
             >
               <CiSearch className="text-2xl" />
             </li>
-            <li
+            {/* <li
               onClick={() => setIsLoginOpen(true)}
               className="cursor-pointer p-2 hover:bg-white/10 rounded-full transition-colors"
             >
               <CiUser className="text-2xl" />
-            </li>
+            </li> */}
           </ul>
         </div>
       </div>
@@ -114,7 +114,7 @@ const Navbar = () => {
             >
               <CiSearch className="text-2xl" />
             </button>
-            <button
+            {/* <button
               onClick={() => {
                 setIsLoginOpen(true)
                 closeMenu()
@@ -123,7 +123,7 @@ const Navbar = () => {
               aria-label="User account"
             >
               <CiUser className="text-2xl" />
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -174,13 +174,6 @@ const Navbar = () => {
                     OurTeam
                   </Link>
                   
-                  <Link
-                    href="/designer"
-                    onClick={closeMenu}
-                    className="text-sm md:text-base font-medium hover:opacity-60 transition-opacity"
-                  >
-                    Designer
-                  </Link>
                 </nav>
               </div>
 
@@ -378,16 +371,7 @@ const Navbar = () => {
                 >
                   Metal Affinities
                 </button>
-                <button 
-                  type="button"
-                  onClick={() => {
-                    console.log('Searching for: Designers')
-                    setIsSearchOpen(false)
-                  }}
-                  className="text-xs px-3 py-1 border border-neutral-300 rounded-full hover:bg-neutral-100 transition"
-                >
-                  Designers
-                </button>
+
               </div>
             </div>
           </form>
