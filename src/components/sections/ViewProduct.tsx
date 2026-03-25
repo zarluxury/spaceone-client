@@ -164,7 +164,7 @@ setProduct(data)
       {/* Product Info Section */}
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-15 py-16 md:py-15">
         {/* Product Name */}
-        <h1 className="text-1xl text-gray-900 md:text-2xl lg:text-4xl mb-8 tracking-tight font-gramatika font-[300] ">
+        <h1 className="text-1xl text-gray-900 md:text-2xl lg:text-4xl mb-8 tracking-tight font-gramatika font-light ">
           {product.name}
         </h1>
         {/* Description in two columns */}
@@ -264,7 +264,7 @@ setProduct(data)
       <div
         className={`overflow-hidden transition-all duration-700 ${
           openSection === section.id
-            ? "max-h-[1200px] opacity-100 pb-4"
+            ? "max-h-300 opacity-100 pb-4"
             : "max-h-0 opacity-0"
         }`}
       >

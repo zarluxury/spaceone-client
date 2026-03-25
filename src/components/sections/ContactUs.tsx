@@ -171,7 +171,7 @@ const ContactUs = () => {
             <form className="space-y-10" onSubmit={handleSubmit}>
               {/* ===== 2 column grid ===== */}
               <div className="grid md:grid-cols-2 gap-x-16 gap-y-3">
-                {["Name", "Surname", "Company", "Phone", "Jobs", "", "Address", "", "City", "Zip code", "Country", "Email"].map((label, i) =>
+                {["Name", "Surname", "Company", "Phone", "Address", "", "City", "Zip code", "Country", "Email"].map((label, i) =>
                   label ? (
                     <Input key={i} label={label} onChange={handleChange} value={(form[label.toLowerCase()] as string) || ''} />
                   ) : (

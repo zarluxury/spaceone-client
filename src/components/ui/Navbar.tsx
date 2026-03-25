@@ -5,20 +5,51 @@ import { CiSearch } from "react-icons/ci"
 import { FiUser } from "react-icons/fi"
 import Image from 'next/image'
 import logo from '../../../public/data/logo.png'
-import { CiUser } from "react-icons/ci"
+import { CiPhone, CiUser } from "react-icons/ci"
 import Link from 'next/link'
 import {
   FaFacebookF,
   FaInstagram,
-  FaYoutube,
-  FaPinterestP,
   FaLinkedinIn,
+  FaPinterestP,
+  FaYoutube,
 } from "react-icons/fa"
+import axios from 'axios'
+
+interface Product {
+  id: string
+  name: string
+  slug: string
+  category: string
+  subcategory: string
+  description: string
+  designer: string
+  heroImage: string
+  sliderImages: string[]
+  colors: Color[]
+  suggestProduct: SuggestProduct[]
+}
+
+interface Color {
+  id: number
+  name: string
+  code: string
+  category: 'classic' | 'plate' | 'weave'
+  image: string
+}
+
+interface SuggestProduct {
+  src: string
+  name: string
+}
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false) // New state for search modal
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<Product[]>([])
+  const [isSearching, setIsSearching] = useState(false)
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -26,6 +57,37 @@ const Navbar = () => {
 
   const closeMenu = () => {
     setIsMenuOpen(false)
+  }
+
+  const handleSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([])
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      // Fetch all products from backend API
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/products`)
+      const allProducts = response.data
+      
+      // Filter products by title (name)
+      const filteredProducts = allProducts.filter((product: Product) => 
+        product.name.toLowerCase().includes(query.toLowerCase())
+      )
+      setSearchResults(filteredProducts)
+    } catch (error) {
+      console.error('Search error:', error)
+      setSearchResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value
+    setSearchQuery(query)
+    handleSearch(query)
   }
 
   return (
@@ -67,12 +129,20 @@ const Navbar = () => {
             >
               <CiSearch className="text-2xl" />
             </li>
+            <Link href={'/contact-us'}>
+            <li 
+              className="cursor-pointer p-2 hover:bg-white/10 rounded-full transition-colors"
+            >
+              <CiPhone className="text-2xl" />
+            </li>
+            </Link>
             {/* <li
               onClick={() => setIsLoginOpen(true)}
               className="cursor-pointer p-2 hover:bg-white/10 rounded-full transition-colors"
             >
               <CiUser className="text-2xl" />
             </li> */}
+
           </ul>
         </div>
       </div>
@@ -317,15 +387,15 @@ const Navbar = () => {
           {/* Search Form */}
           <form className="flex flex-col gap-5" onSubmit={(e) => {
             e.preventDefault()
-            // Handle search logic here
-            console.log('Searching for:', e.target.search.value)
-            setIsSearchOpen(false)
+            handleSearch(searchQuery)
           }}>
             <div className="relative">
               <input
                 type="text"
                 name="search"
                 placeholder="What are you looking for?"
+                value={searchQuery}
+                onChange={handleSearchInputChange}
                 className="w-full border-b border-neutral-400 focus:outline-none py-3 text-base pr-10"
                 autoFocus
               />
@@ -337,43 +407,54 @@ const Navbar = () => {
               </button>
             </div>
 
-            {/* Optional: Quick Links or Categories */}
-            <div className="mt-4">
-              <p className="text-xs text-neutral-500 mb-3">Popular searches:</p>
-              <div className="flex flex-wrap gap-2">
-                <button 
-                  type="button"
-                  onClick={() => {
-                    console.log('Searching for: Products')
-                    setIsSearchOpen(false)
-                  }}
-                  className="text-xs px-3 py-1 border border-neutral-300 rounded-full hover:bg-neutral-100 transition"
-                >
-                  Products
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => {
-                    console.log('Searching for: Downloads')
-                    setIsSearchOpen(false)
-                  }}
-                  className="text-xs px-3 py-1 border border-neutral-300 rounded-full hover:bg-neutral-100 transition"
-                >
-                  Downloads
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => {
-                    console.log('Searching for: Metal Affinities')
-                    setIsSearchOpen(false)
-                  }}
-                  className="text-xs px-3 py-1 border border-neutral-300 rounded-full hover:bg-neutral-100 transition"
-                >
-                  Metal Affinities
-                </button>
-
+            {/* Search Results */}
+            {searchQuery && (
+              <div className="mt-6">
+                {isSearching ? (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-neutral-500">Searching...</p>
+                  </div>
+                ) : searchResults.length > 0 ? (
+                  <div className="space-y-3">
+                    <p className="text-xs text-neutral-500 mb-3">Found {searchResults.length} product{searchResults.length > 1 ? 's' : ''}:</p>
+                    {searchResults.map((product) => (
+                      <Link
+                        key={product.id}
+                        href={`/productview/${product.slug}`}
+                        onClick={() => {
+                          setIsSearchOpen(false)
+                          setSearchQuery('')
+                          setSearchResults([])
+                        }}
+                        className="flex items-center gap-4 p-3 rounded-lg hover:bg-neutral-50 transition-colors cursor-pointer group"
+                      >
+                        <div className="relative w-16 h-16 overflow-hidden rounded-md flex-shrink-0">
+                          <Image
+                            src={product.heroImage}
+                            alt={product.name}
+                            width={64}
+                            height={64}
+                            className="object-cover group-hover:scale-105 transition-transform duration-200"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-medium text-black group-hover:text-neutral-700 transition-colors truncate">
+                            {product.name}
+                          </h4>
+                          <p className="text-xs text-neutral-500 capitalize">
+                            {product.category} • {product.subcategory}
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-neutral-500">No products found for "{searchQuery}"</p>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </form>
         </div>
       </div>
