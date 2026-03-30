@@ -1,147 +1,74 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
 import { Footer } from "../ui/Footer";
 
-interface AchievementItem {
+interface ReelItem {
   id: number;
-  title: string;
-  category: string;
-  year: string;
-  img: string;
-  description: string;
+  videoUrl: string;
+  caption: string;
+  curatedBy: string;
 }
 
-const items: AchievementItem[] = [
+const reelData: ReelItem[] = [
   {
     id: 1,
-    title: "Luxury Hotel Lobby",
-    category: "Tiles",
-    year: "2024",
-    img: "https://images.unsplash.com/photo-1618220179428-22790b461013",
-    description: "Large format marble finish tiles for premium hotel lobby.",
+    videoUrl: "https://www.instagram.com/reel/DPnzZJ-DMgL/?igsh=MXZvbjFpbHRjbnlwag==",
+    caption: "An evening where every conversation carried meaning and every connection felt effortless. A night that reminded us how beautiful it is when ideas and people come together.\n\nGracefully curated by Mihir Kotak & Rinki Kotak of 4th Dimension.\n\n#SpaceOne #Veneer #InteriorDesign #luxurydesign #Art #Networking #ConnectionsThatLast #InspiringEvening #MakingConnections #IdeasInMotion #MomentsOfMagic #NetworkingVibes #SharedInspiration",
+    curatedBy: "Mihir Kotak & Rinki Kotak of 4th Dimension"
   },
   {
     id: 2,
-    title: "Art Mosaic Wall",
-    category: "Mosaics",
-    year: "2023",
-    img: "https://images.unsplash.com/photo-1600607688066-890987f18a86",
-    description: "Handcrafted mosaic feature wall installation.",
-  },
-  {
-    id: 3,
-    title: "Outdoor Stone Surface",
-    category: "Surfaces",
-    year: "2024",
-    img: "https://images.unsplash.com/photo-1600573472550-8090b5e0745e",
-    description: "Weather-resistant architectural surface solution.",
+    videoUrl: "https://www.instagram.com/reel/C-fb4P9o834/?igsh=MWhubzl5MzY5aDM4aQ==",
+    caption: "We're beyond grateful to have had the amazing Architect @yogesh.wadhwana from @dwgdesigns visit our SpaceOne family. Your kind words and continued trust mean so much to us. Thank you for always choosing us, and for the incredible bond we've built over the years. Here's to many more years of creativity together! #SpaceOneSurfaces #YogeshWadhwana #DWGDesign #ArchitectsChoice #gratitude",
+    curatedBy: "Mihir Kotak & Rinki Kotak of 4th Dimension"
   },
 ];
+
 export default function Achievements() {
-  const [filter, setFilter] = useState("All");
-  const [active, setActive] = useState<AchievementItem | null>(null);
-
-  const categories = ["All", "Tiles", "Mosaics", "Surfaces"];
-
-  const filtered =
-    filter === "All" ? items : items.filter((i) => i.category === filter);
+  const getEmbedUrl = (url: string) => {
+    const match = url.match(/\/reel\/([^/?]+)/);
+    if (match) {
+      return `https://www.instagram.com/reel/${match[1]}/embed/`;
+    }
+    return url;
+  };
 
   return (
     <>
-    <div className="min-h-screen bg-white font-gramatika">
-      {/* ===== CONTAINER ===== */}
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-20">
+      <div className="min-h-screen bg-black font-gramatika">
+        {/* Header */}
+        <div className="max-w-7xl mx-auto px-8 sm:px-6 lg:px-12 py-10 sm:py-14">
+          <h1 className="text-white text-2xl sm:text-3xl lg:text-4xl font-semibold mb-12 mt-12 text-center">
+            Achievements & Highlights
+          </h1>
 
-        {/* ===== HEADER ===== */}
-        <h1 className="text-4xl mb-10 tracking-wide">Achievements</h1>
+          {/* Responsive Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {reelData.map((reel) => (
+              <div
+                key={reel.id}
+                className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300"
+              >
 
-        {/* ===== FILTER TABS ===== */}
-        <div className="flex gap-6 mb-12 flex-wrap">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setFilter(cat)}
-              className={`px-5 py-2 border rounded-full transition ${
-                filter === cat
-                  ? "bg-black text-white"
-                  : "hover:bg-gray-100"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+
+                {/* Reel/Video */}
+                <div className="relative w-full aspect-[9/16] overflow-hidden rounded-sm">
+                  <iframe
+                    src={getEmbedUrl(reel.videoUrl)}
+                    className="absolute inset-0 w-full h-full"
+                    allowFullScreen
+                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                    sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                    style={{ scrollbarWidth: "none" }}
+                  />
+                </div>
+
+              </div>
+            ))}
+          </div>
         </div>
-
-        {/* ===== GRID ===== */}
-        <motion.div
-          layout
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
-        >
-          {filtered.map((item) => (
-            <motion.div
-              key={item.id}
-              layout
-              whileHover={{ y: -6 }}
-              className="cursor-pointer group"
-              onClick={() => setActive(item)}
-            >
-              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
-                <Image
-                  src={item.img}
-                  alt=""
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover group-hover:scale-110 transition duration-700"
-                  unoptimized={true}
-                />
-              </div>
-
-              <div className="mt-4">
-                <p className="text-sm text-gray-500">{item.category} • {item.year}</p>
-                <h3 className="text-lg">{item.title}</h3>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
       </div>
-
-      {/* ===== MODAL ===== */}
-      <AnimatePresence>
-        {active && (
-          <motion.div
-            className="fixed inset-0 bg-black/60 flex items-center justify-center p-6 z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setActive(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white max-w-3xl w-full rounded-2xl overflow-hidden"
-            >
-              <div className="relative aspect-[16/9]">
-                <Image src={active.img} alt="" fill sizes="(max-width: 768px) 100vw, 80vw" className="object-cover" unoptimized={true} />
-              </div>
-
-              <div className="p-6">
-                <h2 className="text-2xl mb-2">{active.title}</h2>
-                <p className="text-gray-500 mb-4">
-                  {active.category} • {active.year}
-                </p>
-                <p className="text-gray-700">{active.description}</p>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-      <Footer/>
+      <Footer />
     </>
   );
 }

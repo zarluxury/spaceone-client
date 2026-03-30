@@ -59,6 +59,7 @@ const ViewProduct = ({ slug }: ViewProductProps) => {
   const [selectedColor, setSelectedColor] = useState(0)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true)
   const [openSection, setOpenSection] = useState("")
   const [activeColorCategory, setActiveColorCategory] = useState("classic")
   const [relatedProducts, setRelatedProducts] = useState<any[]>([])
@@ -109,6 +110,36 @@ setProduct(data)
     }
   }, [product])
 
+  // Use product slider images or fallback
+  const sliderImages = product?.sliderImages?.length > 0 ? product.sliderImages : product?.heroImage ? [product.heroImage] : []
+
+  const nextSlide = () => {
+    setCurrentSlide((prev: number) => (prev + 1) % sliderImages.length)
+  }
+
+  const prevSlide = () => {
+    setCurrentSlide((prev: number) => (prev - 1 + sliderImages.length) % sliderImages.length)
+  }
+
+  // Auto-play functionality
+  useEffect(() => {
+    if (!isAutoPlaying || !product || !product.sliderImages || product.sliderImages.length <= 1) return
+
+    const interval = setInterval(() => {
+      nextSlide()
+    }, 3000) // Change slide every 3 seconds
+
+    return () => clearInterval(interval)
+  }, [isAutoPlaying, currentSlide, product?.sliderImages?.length])
+
+  // Pause auto-play on user interaction
+  const handleUserInteraction = (callback: () => void) => {
+    setIsAutoPlaying(false)
+    callback()
+    // Resume auto-play after 5 seconds of inactivity
+    setTimeout(() => setIsAutoPlaying(true), 5000)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -134,31 +165,22 @@ setProduct(data)
     }))
   ) || []
 
-  // Use product slider images or fallback
-  const sliderImages = product.sliderImages?.length > 0 ? product.sliderImages : [product.heroImage]
-  
   // Use suggest products from API or fallback
   const suggestProduct = product.suggestProduct || []
 
-  const nextSlide = () => {
-    setCurrentSlide((prev: number) => (prev + 1) % sliderImages.length)
-  }
-
-  const prevSlide = () => {
-    setCurrentSlide((prev: number) => (prev - 1 + sliderImages.length) % sliderImages.length)
-  }
   return (
     <>
     <div className="min-h-screen bg-white text-black">
       {/* Main Hero Image */}
-      <div className="relative w-full h-screen">
+<div className="relative w-full h-screen">
   <Image 
     src={product.heroImage}
     alt="Product Hero Image"
     fill
     sizes="100vw"
     priority
-    className="object-cover"
+    quality={100}
+    unoptimized
   />
 </div>
       {/* Product Info Section */}
@@ -195,8 +217,8 @@ setProduct(data)
       const clickX = e.clientX;
       if (clickX >= rect.left && clickX <= rect.right) return;
       const center = window.innerWidth / 2;
-      if (clickX < center) prevSlide();
-      else nextSlide();
+      if (clickX < center) handleUserInteraction(prevSlide);
+      else handleUserInteraction(nextSlide);
     }}
   >
     {/* SLIDE TRACK */}
@@ -231,7 +253,8 @@ setProduct(data)
     </div>
   </div>
   {/* fraction */}
-  <div className="text-center mt-0 text-sm text-gray-500 tracking-wide font-light">
+  <div className="text-center mt-0 text-sm text-gray-500 tracking-wide font-light flex items-center justify-center gap-4">
+
     {currentSlide + 1} / {sliderImages.length}
   </div>
 </div>

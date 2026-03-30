@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { GoDownload } from "react-icons/go";
 import bottomImg from '../../../public/data/Materioteca-footer.jpeg'
 import { Footer } from '../ui/Footer';
+import { DownloadForm } from '../ui/DownloadForm';
 import Link from 'next/link';
 
 interface Finish {
@@ -28,6 +29,10 @@ const Finishes = ({ finishName, productId }: FinishesProps) => {
   const [loading, setLoading] = useState(true);
   const [productInfo, setProductInfo] = useState<any>(null);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [showDownloadForm, setShowDownloadForm] = useState(false);
+  const [pendingDownload, setPendingDownload] = useState<{url: string, name: string, productId: string, productName: string} | null>(null);
+  const [formLoading, setFormLoading] = useState(false);
+  const [downloadedImages, setDownloadedImages] = useState<Set<string>>(new Set());
 
   // API functions
   const getAllFinishes = async (): Promise<Finish[]> => {
@@ -143,6 +148,115 @@ const Finishes = ({ finishName, productId }: FinishesProps) => {
     }
   };
 
+  const handleDownload = async (url: string, name: string, productId: string, productName: string) => {
+    // Check if already downloaded
+    const email = localStorage.getItem('userEmail');
+    if (email && downloadedImages.has(url)) {
+      // Direct download if already submitted form
+      try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = `${name}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(blobUrl);
+      } catch (err) {
+        console.error('Download failed:', err);
+      }
+      return;
+    }
+
+    // Show form for first-time download
+    setPendingDownload({ url, name, productId, productName });
+    setShowDownloadForm(true);
+  };
+
+  const checkDownloadAccess = async (email: string, imageUrl: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/downloads/check-access?email=${encodeURIComponent(email)}&imageUrl=${encodeURIComponent(imageUrl)}`);
+      const data = await response.json();
+      return data.hasAccess;
+    } catch (error) {
+      console.error('Error checking download access:', error);
+      return false;
+    }
+  };
+
+  const handleFormSubmit = async (formData: any) => {
+    setFormLoading(true);
+    try {
+      // Transform phone format if needed
+      const submissionData = {
+        ...formData,
+        phone: {
+          countryCode: formData.phone.includes('+') ? formData.phone.split(' ')[0] : '+91',
+          number: formData.phone.includes('+') ? formData.phone.split(' ').slice(1).join(' ') : formData.phone
+        }
+      };
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/downloads/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submissionData),
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        // Store email in localStorage for future downloads
+        localStorage.setItem('userEmail', formData.email);
+        
+        // Add to downloaded images
+        setDownloadedImages(prev => new Set([...prev, formData.imageUrl]));
+        
+        // Close form and download the image
+        setShowDownloadForm(false);
+        
+        if (pendingDownload) {
+          await handleDirectDownload(pendingDownload.url, pendingDownload.name);
+        }
+        
+        setPendingDownload(null);
+      } else {
+        console.error('Form submission failed:', result.message);
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleDirectDownload = async (url: string, name: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `${name}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Download failed:', err);
+    }
+  };
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
+  }, [])
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -227,32 +341,6 @@ const Finishes = ({ finishName, productId }: FinishesProps) => {
     return acc;
   }, {} as Record<string, Finish[]>);
 
-  const handleDownload = async (url: string, name: string) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-
-      const blobUrl = window.URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = `${name}.jpg`;
-      document.body.appendChild(a);
-      a.click();
-
-      a.remove();
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (err) {
-    }
-  };
-
-  useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    })
-  }, [])
-
   if (loading) {
     return (
       <div className="w-full h-screen bg-gray-50 flex items-center justify-center">
@@ -311,7 +399,7 @@ const Finishes = ({ finishName, productId }: FinishesProps) => {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        handleDownload(finish.colorImage, finish.colorName);
+                        handleDownload(finish.colorImage, finish.colorName, finish.productId, finish.productName);
                       }}
                     />
                   </div>
@@ -324,7 +412,7 @@ const Finishes = ({ finishName, productId }: FinishesProps) => {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          handleDownload(finish.colorImage, finish.colorName);
+                          handleDownload(finish.colorImage, finish.colorName, finish.productId, finish.productName);
                         }}
                         className="text-xl hover:scale-110 transition cursor-pointer text-gray-600 hover:text-black"
                       />
@@ -403,6 +491,23 @@ const Finishes = ({ finishName, productId }: FinishesProps) => {
       )}
 
       <Footer />
+      
+      {/* Download Form Modal */}
+      {pendingDownload && (
+        <DownloadForm
+          isOpen={showDownloadForm}
+          onClose={() => {
+            setShowDownloadForm(false);
+            setPendingDownload(null);
+          }}
+          onSubmit={handleFormSubmit}
+          imageUrl={pendingDownload.url}
+          imageName={pendingDownload.name}
+          productId={pendingDownload.productId}
+          productName={pendingDownload.productName}
+          loading={formLoading}
+        />
+      )}
     </div>
   );
 }
