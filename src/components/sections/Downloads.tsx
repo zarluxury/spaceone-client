@@ -6,11 +6,14 @@ import img_1 from "../../../public//images/product/Classic/camelcoat-03.jpg"
 import img_2 from "../../../public//images/product/Classic/dove-01.jpg"
 import img_3 from "../../../public//images/product/Classic/verona-02.jpg"
 import { Footer } from "../ui/Footer"
+import { DownloadForm } from "../ui/DownloadForm"
 type DownloadItem = {
   title: string
   image: string
   pdf: string
   category: string
+  productId?: string
+  productName?: string
 }
 
 type BackendDownload = {
@@ -24,6 +27,10 @@ export default function Downloads() {
   const [active, setActive] = useState("Download PDF's")
   const [downloads, setDownloads] = useState<DownloadItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [showDownloadForm, setShowDownloadForm] = useState(false)
+  const [pendingDownload, setPendingDownload] = useState<{url: string, name: string, productId: string, productName: string} | null>(null)
+  const [formLoading, setFormLoading] = useState(false)
+  const [downloadedPdfs, setDownloadedPdfs] = useState<Set<string>>(new Set())
 
   // Get unique categories from downloads data
   const categories = Array.from(new Set(downloads.map(d => d.category)))
@@ -57,7 +64,9 @@ export default function Downloads() {
                 title: download.title,
                 image: [img_1.src, img_2.src, img_3.src][allDownloads.length % 3], // Cycle through default images
                 pdf: download.file,
-                category: "Download PDF's"
+                category: "Download PDF's",
+                productId: product._id,
+                productName: product.name
               })
             })
           }
@@ -81,6 +90,89 @@ export default function Downloads() {
   }, [])
 
   const filtered = downloads.filter(d => d.category === active)
+
+  const handleDownload = async (url: string, name: string, productId: string, productName: string) => {
+    // Check if already downloaded
+    const email = localStorage.getItem('userEmail');
+    if (email && downloadedPdfs.has(url)) {
+      // Direct download if already submitted form
+      await handleDirectDownload(url, name);
+      return;
+    }
+
+    // Show form for first-time download
+    setPendingDownload({ url, name, productId, productName });
+    setShowDownloadForm(true);
+  };
+
+  const handleFormSubmit = async (formData: any) => {
+    setFormLoading(true);
+    try {
+      // Transform phone format if needed
+      const submissionData = {
+        ...formData,
+        phone: {
+          countryCode: formData.phone.includes('+') ? formData.phone.split(' ')[0] : '+91',
+          number: formData.phone.includes('+') ? formData.phone.split(' ').slice(1).join(' ') : formData.phone
+        }
+      };
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/downloads/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submissionData),
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        // Store email in localStorage for future downloads
+        localStorage.setItem('userEmail', formData.email);
+        
+        // Add to downloaded PDFs
+        setDownloadedPdfs(prev => new Set([...prev, formData.imageUrl]));
+        
+        // Close form and download the PDF
+        setShowDownloadForm(false);
+        
+        if (pendingDownload) {
+          await handleDirectDownload(pendingDownload.url, pendingDownload.name);
+        }
+        
+        setPendingDownload(null);
+      } else {
+        console.error('Form submission failed:', result.message);
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleDirectDownload = async (url: string, name: string) => {
+    try {
+      // Create a temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${name}.pdf`;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Fallback: open in new tab if download doesn't work
+      setTimeout(() => {
+        window.open(url, '_blank');
+      }, 1000);
+    } catch (err) {
+      console.error('Download failed:', err);
+      // Final fallback: open in new tab
+      window.open(url, '_blank');
+    }
+  };
 
   if (loading) {
     return (
@@ -127,12 +219,10 @@ export default function Downloads() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
 
             {filtered.map(item => (
-              <a
+              <div
                 key={item.title}
-                href={item.pdf}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="group cursor-pointer"
+                onClick={() => handleDownload(item.pdf, item.title, item.productId || 'unknown', item.productName || 'Unknown Product')}
               >
                 {/* Cover */}
                 <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
@@ -146,7 +236,7 @@ export default function Downloads() {
                   {/* Hover overlay */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition">
                     <span className="text-white opacity-0 group-hover:opacity-100 text-sm tracking-wide">
-                      Open PDF ↗
+                      Download PDF ↗
                     </span>
                   </div>
                 </div>
@@ -155,7 +245,7 @@ export default function Downloads() {
                 <p className="mt-4 text-sm tracking-wide">
                   {item.title}
                 </p>
-              </a>
+              </div>
             ))}
 
           </div>
@@ -163,6 +253,23 @@ export default function Downloads() {
       </div>
     </div>
     <Footer />
+    
+    {/* Download Form Modal */}
+    {pendingDownload && (
+      <DownloadForm
+        isOpen={showDownloadForm}
+        onClose={() => {
+          setShowDownloadForm(false);
+          setPendingDownload(null);
+        }}
+        onSubmit={handleFormSubmit}
+        imageUrl={pendingDownload.url}
+        imageName={pendingDownload.name}
+        productId={pendingDownload.productId}
+        productName={pendingDownload.productName}
+        loading={formLoading}
+      />
+    )}
     </>
   )
 }

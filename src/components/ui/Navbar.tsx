@@ -96,7 +96,7 @@ const Navbar = () => {
         
         {/* Left: Navigation Links & Hamburger */}
         <div className="flex items-center">
-          <ul className="flex items-center gap-6 text-[15px] font-gramatika font-[100] -tracking-tighter">
+          <ul className="flex items-center gap-6 text-[15px] font-gramatika font-thin -tracking-tighter">
             <li className="cursor-pointer hover:opacity-70 transition-opacity" onClick={toggleMenu}>
               {isMenuOpen ? <RxCross2 className="text-2xl" /> : <RxHamburgerMenu className="text-2xl" />}
             </li>
@@ -116,7 +116,7 @@ const Navbar = () => {
         {/* Center: Logo */}
         <div className="flex justify-center items-center">
           <Link href="/" onClick={closeMenu}>
-            <Image src={logo} alt="logo" width={80} height={40} className="object-contain" />
+            <Image src={logo} alt="logo" width={80} height={40} className="object-contain" loading="eager" />
           </Link>
         </div>
 
@@ -149,7 +149,7 @@ const Navbar = () => {
 
       {/* Mobile Menu Overlay */}
       <div className={`
-        fixed top-0 left-0 right-0 z-[100] bg-white text-black transition-all duration-300 ease-in-out
+        fixed top-0 left-0 right-0 z-100 bg-white text-black transition-all duration-300 ease-in-out
         ${isMenuOpen ? 'opacity-100 pointer-events-auto translate-y-0' : 'opacity-0 pointer-events-none -translate-y-full'}
       `}>
         {/* Top Bar */}
@@ -168,7 +168,7 @@ const Navbar = () => {
           {/* Center Logo */}
           <div className="flex justify-center items-center">
             <Link href="/" onClick={closeMenu}>
-              <Image src={logo} alt="logo" width={80} height={40} className="object-contain" />
+              <Image src={logo} alt="logo" width={80} height={40} className="object-contain" loading="eager" />
             </Link>
           </div>
 
@@ -201,7 +201,7 @@ const Navbar = () => {
         <div className="border-t border-neutral-200 " />
 
         {/* Content Area */}
-        <div className="flex overflow-hidden font-[100]  font-gramatika -tracking-tighter">
+        <div className="flex overflow-hidden font-thin  font-gramatika -tracking-tighter">
           {/* Left Content */}
           <div className="flex-1 flex flex-col justify-between px-6 py-8 md:px-10 md:py-5 text-[15px]">
             {/* Navigation Links */}
@@ -358,7 +358,7 @@ const Navbar = () => {
       {/* Search Modal */}
       <div
         className={`
-          fixed inset-0 z-[200] flex items-center justify-center
+          fixed inset-0 z-200 flex items-center justify-center
           bg-black/60 backdrop-blur-md
           transition-all duration-300
           ${isSearchOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
@@ -378,7 +378,7 @@ const Navbar = () => {
         >
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-gramatika font-[100]">Search</h3>
+            <h3 className="text-lg font-gramatika font-thin">Search</h3>
             <button onClick={() => setIsSearchOpen(false)}>
               <RxCross2 className="text-xl hover:opacity-60" />
             </button>
@@ -428,7 +428,7 @@ const Navbar = () => {
                         }}
                         className="flex items-center gap-4 p-3 rounded-lg hover:bg-neutral-50 transition-colors cursor-pointer group"
                       >
-                        <div className="relative w-16 h-16 overflow-hidden rounded-md flex-shrink-0">
+                        <div className="relative w-16 h-16 overflow-hidden rounded-md shrink-0">
                           <Image
                             src={product.heroImage}
                             alt={product.name}
@@ -462,7 +462,7 @@ const Navbar = () => {
       {/* Login Modal */}
       <div
         className={`
-          fixed inset-0 z-[200] flex items-center justify-center
+          fixed inset-0 z-200 flex items-center justify-center
           bg-black/60 backdrop-blur-md
           transition-all duration-300
           ${isLoginOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
@@ -482,7 +482,7 @@ const Navbar = () => {
         >
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-gramatika font-[100]">Reserved area</h3>
+            <h3 className="text-lg font-gramatika font-thin">Reserved area</h3>
             <button onClick={() => setIsLoginOpen(false)}>
               <RxCross2 className="text-xl hover:opacity-60" />
             </button>

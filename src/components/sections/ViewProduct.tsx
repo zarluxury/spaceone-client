@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react'
 import { CiCirclePlus } from "react-icons/ci";
 import { useParams } from 'next/navigation'
 import { Footer } from '../ui/Footer'
+import { DownloadForm } from '../ui/DownloadForm'
+import { ProductViewSkeleton } from '../ui/Skeleton'
 import Link from 'next/link';
 
 interface Finish {
@@ -63,6 +65,25 @@ const ViewProduct = ({ slug }: ViewProductProps) => {
   const [openSection, setOpenSection] = useState("")
   const [activeColorCategory, setActiveColorCategory] = useState("classic")
   const [relatedProducts, setRelatedProducts] = useState<any[]>([])
+  const [showDownloadForm, setShowDownloadForm] = useState(false)
+  const [pendingDownload, setPendingDownload] = useState<{url: string, name: string, productId: string, productName: string} | null>(null)
+  const [formLoading, setFormLoading] = useState(false)
+  const [downloadedPdfs, setDownloadedPdfs] = useState<Set<string>>(new Set())
+
+  // Filter sections dynamically - only show downloads if there are actual PDFs
+  const getAvailableSections = () => {
+    const sections = [
+      { id: "finishes", title: "Finishes" },
+      { id: "dimensions", title: "Dimensions" },
+    ];
+    
+    // Only add downloads section if there are actual PDF files
+    if (product?.downloads && product.downloads.length > 0) {
+      sections.push({ id: "downloads", title: "Downloads" });
+    }
+    
+    return sections;
+  };
 
   const fetchRelatedProducts = async () => {
     try {
@@ -140,12 +161,88 @@ setProduct(data)
     setTimeout(() => setIsAutoPlaying(true), 5000)
   }
 
+  const handleDownload = async (url: string, name: string, productId: string, productName: string) => {
+    // Check if already downloaded
+    const email = localStorage.getItem('userEmail');
+    if (email && downloadedPdfs.has(url)) {
+      // Direct download if already submitted form
+      await handleDirectDownload(url, name);
+      return;
+    }
+
+    // Show form for first-time download
+    setPendingDownload({ url, name, productId, productName });
+    setShowDownloadForm(true);
+  };
+
+  const handleFormSubmit = async (formData: any) => {
+    setFormLoading(true);
+    try {
+      // Transform phone format if needed
+      const submissionData = {
+        ...formData,
+        phone: {
+          countryCode: formData.phone.includes('+') ? formData.phone.split(' ')[0] : '+91',
+          number: formData.phone.includes('+') ? formData.phone.split(' ').slice(1).join(' ') : formData.phone
+        }
+      };
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/downloads/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submissionData),
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        // Store email in localStorage for future downloads
+        localStorage.setItem('userEmail', formData.email);
+        
+        // Add to downloaded PDFs
+        setDownloadedPdfs(prev => new Set([...prev, formData.imageUrl]));
+        
+        // Close form and download the PDF
+        setShowDownloadForm(false);
+        
+        if (pendingDownload) {
+          await handleDirectDownload(pendingDownload.url, pendingDownload.name);
+        }
+        
+        setPendingDownload(null);
+      } else {
+              }
+    } catch (error) {
+          } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleDirectDownload = async (url: string, name: string) => {
+    try {
+      // Create a temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${name}.pdf`;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Fallback: open in new tab if download doesn't work
+      setTimeout(() => {
+        window.open(url, '_blank');
+      }, 1000);
+    } catch (err) {
+            // Final fallback: open in new tab
+      window.open(url, '_blank');
+    }
+  };
+
   if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-lg">Loading product...</div>
-      </div>
-    )
+    return <ProductViewSkeleton />
   }
 
   if (!product) {
@@ -179,7 +276,6 @@ setProduct(data)
     fill
     sizes="100vw"
     priority
-    quality={100}
     unoptimized
   />
 </div>
@@ -260,11 +356,7 @@ setProduct(data)
 </div>
 {/* ===== FULL SCREEN METAL DETAILS SECTION ===== */}
 <div className="min-h-auto bg-white px-8 md:px-16 lg:px-15 font-gramatika">
-  {[
-    { id: "finishes", title: "Metal finishes" },
-    { id: "dimensions", title: "Dimensions" },
-    { id: "downloads", title: "Downloads" },
-  ].map((section) => (
+  {getAvailableSections().map((section) => (
     <div key={section.id} className="w-full">
       <hr className="border-gray-300" />
       {/* HEADER */}
@@ -388,15 +480,13 @@ setProduct(data)
         {section.id === "downloads" && (
           <div className="flex flex-col gap-4 text-lg">
             {product.downloads?.map((download: any, index: number) => (
-              <a 
+              <div 
                 key={index}
-                href={download.file} 
+                onClick={() => handleDownload(download.file, download.title, product._id, product.name)}
                 className="underline hover:text-blue-600 cursor-pointer"
-                target="_blank"
-                rel="noopener noreferrer"
               >
                 {download.title}
-              </a>
+              </div>
             ))}
           </div>
         )}
@@ -436,8 +526,24 @@ setProduct(data)
       </div>
     </div>
     <Footer />
-    </>
-  )
-}
+    
+    {/* Download Form Modal */}
+    {pendingDownload && (
+      <DownloadForm
+        isOpen={showDownloadForm}
+        onClose={() => {
+          setShowDownloadForm(false);
+          setPendingDownload(null);
+        }}
+        onSubmit={handleFormSubmit}
+        imageUrl={pendingDownload.url}
+        imageName={pendingDownload.name}
+        productId={pendingDownload.productId}
+        productName={pendingDownload.productName}
+        loading={formLoading}
+      />
+    )}
+  </>
+)}
 
 export default ViewProduct

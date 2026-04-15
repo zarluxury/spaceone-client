@@ -428,13 +428,13 @@ const Finishes = ({ finishName, productId }: FinishesProps) => {
                     href={`/finishes/${finish.colorName.replace(/\s+/g, '-')}`}
                     className="block"
                   >
-                    <div className="w-full mb-4">
+                    <div className="w-full mb-4 aspect-square">
                       <Image
                         src={finish.colorImage}
                         alt={finish.colorName}
                         width={500}
                         height={500}
-                        className="w-full h-auto object-contain rounded-lg"
+                        className="w-full h-full object-cover rounded-lg"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();

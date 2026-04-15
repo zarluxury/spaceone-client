@@ -35,10 +35,10 @@ export default function Achievements() {
 
   return (
     <>
-      <div className="min-h-screen bg-black font-gramatika">
+      <div className="min-h-screen bg-white font-gramatika">
         {/* Header */}
         <div className="max-w-7xl mx-auto px-8 sm:px-6 lg:px-12 py-10 sm:py-14">
-          <h1 className="text-white text-2xl sm:text-3xl lg:text-4xl font-semibold mb-12 mt-12 text-center">
+          <h1 className="text-black text-2xl sm:text-3xl lg:text-4xl font-semibold mb-12 mt-12 text-center">
             Achievements & Highlights
           </h1>
 
@@ -47,12 +47,12 @@ export default function Achievements() {
             {reelData.map((reel) => (
               <div
                 key={reel.id}
-                className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300"
+                className="bg-black rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300"
               >
 
 
                 {/* Reel/Video */}
-                <div className="relative w-full aspect-[9/16] overflow-hidden rounded-sm">
+                <div className="relative w-full aspect-9/16 overflow-hidden rounded-sm">
                   <iframe
                     src={getEmbedUrl(reel.videoUrl)}
                     className="absolute inset-0 w-full h-full"

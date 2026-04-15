@@ -26,7 +26,7 @@ const footerData = {
 
   contact: {
     title: "Get in Touch",
-    phone: "+91 98765 43210",
+    phone: "+91 96533 18434",
     email: "info@spaceone.com",
     link: "/contact-us",
   },
@@ -82,19 +82,19 @@ export function Footer() {
 
           {/* Column 2 - Contact */}
           <div className="mb-6">
-            <h3 className="text-base text-white">
+            <h3 className="text-base text-white ">
               {footerData.contact.title}
             </h3>
             <div className="flex flex-col gap-0 mt-4">
 
             <Link href={`tel:${footerData.contact.phone}`}>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-400 hover:text-white transition-colors">
                 {footerData.contact.phone}
               </p>
             </Link>
 
             <Link href={`mailto:${footerData.contact.email}`}>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-400 hover:text-white transition-colors">
                 {footerData.contact.email}
               </p>
             </Link>

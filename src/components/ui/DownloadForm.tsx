@@ -289,7 +289,7 @@ export const DownloadForm: React.FC<DownloadFormProps> = ({
             ) : (
               <>
                 <Download className="w-4 h-4" />
-                Download Image
+                Download
               </>
             )}
           </button>

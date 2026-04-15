@@ -7,7 +7,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const contactData = {
   title: "Headquarters",
   address: "120/A, Bombay Talkies compound, Dadiseth Lane,\nOff S.V. Road, Opp. Malad Sahakari Bank,\nMalad West, Mumbai 400064. India",
-  phone: "+91 9653318434",
+  phone: "+91 96533 18434",
   email: "info@spaceonesurfaces.com",
   openingHours: {
     title: "Opening hours",
@@ -22,7 +22,6 @@ interface FormData {
 
 const ContactUs = () => {
   const [form, setForm] = useState<FormData>({});
-  const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('');
@@ -31,12 +30,6 @@ const ContactUs = () => {
     const target = e.target;
     const value = target.type === 'checkbox' ? (target as HTMLInputElement).checked : target.value;
     setForm({ ...form, [target.name]: value });
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,11 +49,6 @@ const ContactUs = () => {
           formData.append(key, value);
         }
       });
-      
-      // Add file if selected
-      if (file) {
-        formData.append('attachment', file);
-      }
 
       const response = await fetch(`${API_URL}/api/contact`, {
         method: 'POST',
@@ -74,10 +62,6 @@ const ContactUs = () => {
         setMessageType('success');
         // Reset form
         setForm({});
-        setFile(null);
-        // Reset file input
-        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
         // Reset checkboxes
         const checkboxes = document.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>;
         checkboxes.forEach(checkbox => checkbox.checked = false);
@@ -173,7 +157,7 @@ const ContactUs = () => {
               <div className="grid md:grid-cols-2 gap-x-16 gap-y-3">
                 {["Name", "Surname", "Company", "Phone", "Address", "", "City", "Zip code", "Country", "Email"].map((label, i) =>
                   label ? (
-                    <Input key={i} label={label} onChange={handleChange} value={(form[label.toLowerCase()] as string) || ''} />
+                    <Input key={i} label={label} onChange={handleChange} value={(form[label.toLowerCase() === 'zip code' ? 'zipCode' : label.toLowerCase()] as string) || ''} />
                   ) : (
                     <div key={i}></div>
                   )
@@ -191,18 +175,6 @@ const ContactUs = () => {
                   className="w-full border border-black p-4 outline-none resize-none text-sm"
                   required
                 />
-              </div>
-
-              {/* Attachment */}
-              <div className="flex items-center justify-between border-b border-black pb-3">
-                <label className="text-sm text-gray-500">
-                  {file ? file.name : 'Attachment (doc, pdf, png, jpg) Max 5MB'}
-                </label>
-
-                <label className="cursor-pointer border border-black rounded-full w-8 h-8 flex items-center justify-center text-lg">
-                  +
-                  <input type="file" className="hidden" onChange={handleFileChange} accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" />
-                </label>
               </div>
 
               {/* Checkboxes */}
@@ -251,7 +223,7 @@ function Input({ label, onChange, value }: InputProps) {
   return (
     <div className="flex flex-col">
       <input
-        name={label.toLowerCase()}
+        name={label.toLowerCase() === 'zip code' ? 'zipCode' : label.toLowerCase()}
         placeholder={`${label}*`}
         value={value}
         onChange={onChange}

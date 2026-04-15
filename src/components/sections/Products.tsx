@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Footer } from '../ui/Footer';
 import Image from 'next/image';
-
+import { ProductsGridSkeleton } from '../ui/Skeleton';
 
 interface Finish {
   type: string
@@ -92,9 +92,7 @@ const Products = (props: ProductsProps) => {
 
       {/* Product Grid */}
       {loading ? (
-        <div className="flex justify-center items-center py-20">
-          <div className="text-lg">Loading products...</div>
-        </div>
+        <ProductsGridSkeleton />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-[1600px] mx-auto">
           {products.map((product) => (
