@@ -150,36 +150,76 @@ export default function QRRedirectPage() {
         showNotification('Download started successfully!', 'success')
         setShowDownloadForm(false)
         
-        // Trigger download using a different approach to avoid CORS
+        // Trigger automatic download
         if (data?.imageUrl) {
           try {
-            // Create a temporary link and trigger download
-            const link = document.createElement('a');
-            link.href = data.imageUrl;
-            link.download = `${data.imageName}.jpg`;
-            link.target = '_blank';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // Method 1: Fetch with no-cors mode and force download
+            const downloadImage = async () => {
+              try {
+                const response = await fetch(data.imageUrl, {
+                  method: 'GET',
+                  mode: 'no-cors',
+                  cache: 'no-cache'
+                });
+                
+                // If no-cors, we can't read response, so trigger direct download
+                const link = document.createElement('a');
+                link.href = data.imageUrl;
+                link.download = `${data.imageName.replace(/\s+/g, '_')}.jpg`;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                setTimeout(() => document.body.removeChild(link), 100);
+                
+              } catch (fetchError) {
+                // Fallback to iframe approach
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = data.imageUrl;
+                document.body.appendChild(iframe);
+                
+                // Remove iframe after download attempt
+                setTimeout(() => {
+                  if (iframe.parentNode) {
+                    iframe.parentNode.removeChild(iframe);
+                  }
+                }, 3000);
+              }
+            };
             
-            // Also try to open in new tab as fallback
-            setTimeout(() => {
-              window.open(data.imageUrl, '_blank');
-            }, 1000);
-            
-            showNotification('Download initiated! Check your downloads folder.', 'success');
+            await downloadImage();
+            showNotification('Download started successfully!', 'success');
           } catch (downloadError) {
             console.error('Download error:', downloadError);
-            // Fallback: open image in new tab
-            window.open(data.imageUrl, '_blank');
-            showNotification('Image opened in new tab. Right-click to save.', 'success');
+            
+            // Method 2: Direct window.location approach
+            try {
+              const tempWindow = window.open(data.imageUrl, '_blank');
+              if (tempWindow) {
+                tempWindow.focus();
+                // Close after 2 seconds to trigger download
+                setTimeout(() => tempWindow.close(), 2000);
+              }
+              showNotification('Image opened in new tab. Right-click to save.', 'success');
+            } catch (fallbackError) {
+              console.error('Fallback download error:', fallbackError);
+              
+              // Method 3: Copy to clipboard with notification
+              try {
+                await navigator.clipboard.writeText(data.imageUrl);
+                showNotification('Image URL copied to clipboard. Please paste in browser to download.', 'success');
+              } catch (clipboardError) {
+                console.error('Clipboard error:', clipboardError);
+                showNotification('Please manually copy the URL to download.', 'success');
+              }
+            }
           }
         }
         
         // Redirect to finishes page after successful download
         setTimeout(() => {
           router.push('/finishes')
-        }, 2000)
+        }, 4000)
       } else {
         showNotification(result.message || 'Failed to submit form', 'error')
       }

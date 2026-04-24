@@ -94,12 +94,12 @@ const Products = (props: ProductsProps) => {
       {loading ? (
         <ProductsGridSkeleton />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-[1600px] mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-400 mx-auto">
           {products.map((product) => (
             <Link key={product._id} href={`/productview/${product.slug}`} className="group cursor-pointer">
-              <div className="aspect-[4/5] overflow-hidden bg-[#f5f5f5] mb-4">
+              <div className="aspect-4/5 overflow-hidden bg-[#f5f5f5] mb-4">
                 <img
-                  src={product.heroImage}
+                  src={product.heroImage} 
                   alt={product.name}
                   className="w-full h-full object-fill transition-transform duration-700 group-hover:scale-105"
                 />

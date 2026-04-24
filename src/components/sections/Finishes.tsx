@@ -208,7 +208,14 @@ const Finishes = ({ finishName, productId }: FinishesProps) => {
         setShowDownloadForm(false);
         
         if (pendingDownload) {
+          // Auto-download the image
           await handleDirectDownload(pendingDownload.url, pendingDownload.name);
+          
+          // Open image in new tab
+          const newTab = window.open(pendingDownload.url, '_blank');
+          if (newTab) {
+            newTab.focus();
+          }
         }
         
         setPendingDownload(null);
@@ -224,22 +231,116 @@ const Finishes = ({ finishName, productId }: FinishesProps) => {
 
   const handleDirectDownload = async (url: string, name: string) => {
     try {
-      // Create a temporary link and trigger download
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${name}.jpg`;
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Method 1: Force download using window.location with download attribute
+      const forceDownload = () => {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${name.replace(/\s+/g, '_')}.jpg`;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        console.log('Download attempted via force download method');
+      };
+
+      // Method 2: Use data URL approach for CORS images
+      const tryDataUrlDownload = async () => {
+        try {
+          // Add timestamp to prevent caching issues
+          const urlWithTimestamp = url.includes('?') ? `${url}&t=${Date.now()}` : `${url}?t=${Date.now()}`;
+          
+          // Create a new image element to load the image
+          const img = new window.Image() as HTMLImageElement;
+          img.crossOrigin = 'anonymous'; // Try to load with CORS
+          
+          return new Promise<boolean>((resolve, reject) => {
+            img.onload = () => {
+              try {
+                // Create canvas to convert image to blob
+                const canvas = document.createElement('canvas') as HTMLCanvasElement;
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                  reject(new Error('Canvas context failed'));
+                  return;
+                }
+                ctx.drawImage(img, 0, 0);
+                
+                // Convert to blob and download
+                canvas.toBlob((blob) => {
+                  if (blob) {
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    link.download = `${name.replace(/\s+/g, '_')}.jpg`;
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    // Clean up
+                    setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+                    console.log('Download successful via canvas method');
+                    resolve(true);
+                  } else {
+                    reject(new Error('Canvas to blob failed'));
+                  }
+                }, 'image/jpeg', 0.9);
+              } catch (canvasError) {
+                reject(canvasError);
+              }
+            };
+            
+            img.onerror = () => reject(new Error('Image load failed'));
+            img.src = urlWithTimestamp;
+          });
+        } catch (error) {
+          console.log('Canvas method failed:', error);
+          throw error;
+        }
+      };
+
+      // Try canvas method first (works for many CORS images)
+      try {
+        await tryDataUrlDownload();
+        return;
+      } catch (canvasError) {
+        console.log('Canvas method failed, trying force download');
+      }
+
+      // Fallback to force download method
+      forceDownload();
       
-      // Fallback: open in new tab if download doesn't work
+      // Additional fallback: Try to open in new tab with download prompt
       setTimeout(() => {
-        window.open(url, '_blank');
+        const downloadWindow = window.open(url, '_blank');
+        if (downloadWindow) {
+          downloadWindow.focus();
+          // Try to trigger download in the new window
+          setTimeout(() => {
+            downloadWindow.document.title = `Download: ${name}`;
+            const downloadLink = downloadWindow.document.createElement('a');
+            downloadLink.href = url;
+            downloadLink.download = `${name.replace(/\s+/g, '_')}.jpg`;
+            downloadLink.textContent = 'If download doesn\'t start, click here';
+            downloadLink.style.display = 'block';
+            downloadLink.style.margin = '20px';
+            downloadLink.style.padding = '10px';
+            downloadLink.style.backgroundColor = '#007bff';
+            downloadLink.style.color = 'white';
+            downloadLink.style.textDecoration = 'none';
+            downloadLink.style.borderRadius = '5px';
+            downloadWindow.document.body.appendChild(downloadLink);
+          }, 1000);
+        }
       }, 1000);
+      
     } catch (err) {
-      console.error('Download failed:', err);
-      // Final fallback: open in new tab
+      console.error('All download methods failed:', err);
+      // Final fallback: just open in new tab
       window.open(url, '_blank');
     }
   };
@@ -364,6 +465,23 @@ const Finishes = ({ finishName, productId }: FinishesProps) => {
     fetchData();
   }, [finishName, productId]);
 
+  useEffect(() => {
+    if (productId && finishName && allFinishes.length > 0) {
+      const currentFinish = allFinishes.find(finish => {
+        const normalizedName = finish.colorName.replace(/\s+/g, '-').toLowerCase();
+        return normalizedName === finishName.toLowerCase();
+      });
+      
+      if (currentFinish) {
+        const fetchRelatedFinishes = async () => {
+          const related = await getRelatedFinishes(currentFinish);
+          setRelatedFinishes(related);
+        };
+        fetchRelatedFinishes();
+      }
+    }
+  }, [productId, finishName, allFinishes]);
+
   // Generate display images from all finishes
   const displayImages = allFinishes.map(finish => ({
     src: finish.colorImage,
@@ -383,12 +501,11 @@ const Finishes = ({ finishName, productId }: FinishesProps) => {
   if (loading) {
     return (
       <div className="w-full h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-lg">Loading finish data...</div>
       </div>
     );
   }
 
-  // Always show all finishes grouped by type
+  // Show all finishes grouped by type (fallback)
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -425,10 +542,10 @@ const Finishes = ({ finishName, productId }: FinishesProps) => {
               {typeFinishes.map((finish, index) => (
                 <div key={`${finish.productId}-${finish.colorName}-${index}`} className="group">
                   <Link
-                    href={`/finishes/${finish.colorName.replace(/\s+/g, '-')}`}
+                    href={`/finishes/${finish.productId}/${finish.colorName.replace(/\s+/g, '-')}`}
                     className="block"
                   >
-                    <div className="w-full mb-4 aspect-square">
+                    <div className="w-full mb-4">
                       <Image
                         src={finish.colorImage}
                         alt={finish.colorName}
@@ -464,7 +581,7 @@ const Finishes = ({ finishName, productId }: FinishesProps) => {
                       </p>
                     </div>
                   </Link>
-                  
+                   
                   {/* QR Code Section */}
                   <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="text-center">

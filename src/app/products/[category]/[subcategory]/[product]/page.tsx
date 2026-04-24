@@ -12,13 +12,13 @@ interface PageProps {
 
 const page = async ({ params }: PageProps) => {
   const { product } = await params
-  const productData = getProductBySlug(product)
+  const productData = await getProductBySlug(product)
   
   if (!productData) {
     return <div>Product not found</div>
   }
   
-  return <ViewProduct product={productData} />
+  return <ViewProduct slug={product} />
 }
 
 export default page

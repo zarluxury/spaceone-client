@@ -57,7 +57,7 @@ useLayoutEffect(() => {
         // Cache DOM calculations
         const half = el.scrollHeight / 2;
 
-        /* manual scroll with optimized smooth behavior */
+        /* manual scroll with ultra-smooth performance */
         const onWheel = (e: WheelEvent) => {
           e.preventDefault();
           isUserScrolling = true;
@@ -65,19 +65,23 @@ useLayoutEffect(() => {
 
           clearTimeout(timeout);
 
-          // Smooth scroll with faster response
-          const targetScrollTop = currentScrollTop + e.deltaY * 1.2; // Increased multiplier for faster scroll
+          // Smooth scroll with advanced easing
+          const scrollDelta = e.deltaY * 1.0; // Balanced multiplier for smoothness
+          const targetScrollTop = currentScrollTop + scrollDelta;
           const startScrollTop = currentScrollTop;
           const scrollDistance = targetScrollTop - startScrollTop;
-          const duration = 120; // Reduced duration for faster response
+          const duration = 200; // Optimized duration for smoothness
           const startTime = performance.now();
 
           const smoothScroll = (currentTime: number) => {
             const elapsed = currentTime - startTime;
             const progress = Math.min(elapsed / duration, 1);
             
-            // Faster easing with slight acceleration
-            const easeProgress = 1 - Math.pow(1 - progress, 2); // Quadratic ease-out
+            // Advanced easing for buttery smoothness
+            const easeProgress = progress < 0.5 
+              ? 4 * progress * progress * progress // Ease-in cubic
+              : 1 - Math.pow(-2 * progress + 2, 3) / 2; // Ease-out cubic
+            
             currentScrollTop = startScrollTop + scrollDistance * easeProgress;
             
             // Handle loop
@@ -87,6 +91,7 @@ useLayoutEffect(() => {
               currentScrollTop = half + currentScrollTop;
             }
             
+            // Smooth DOM update
             el.scrollTop = currentScrollTop;
 
             if (progress < 1) {
@@ -98,7 +103,7 @@ useLayoutEffect(() => {
 
           timeout = setTimeout(() => {
             isUserScrolling = false;
-          }, 100);
+          }, 100); // Optimized timeout for smooth transition
         };
 
         el.addEventListener("wheel", onWheel, { passive: false });
@@ -123,32 +128,53 @@ useLayoutEffect(() => {
         };
         startupFrame = requestAnimationFrame(startupAnimation);
 
-        // Optimized auto scroll with requestAnimationFrame
+        // Maximum smoothness auto scroll with advanced animation
         let animationId: number;
+        let animationProgress = 0;
+        let lastScrollPosition = 0;
+        let accumulator = 0;
+        
         const auto = () => {
           // Only pause auto-scroll if user recently scrolled (within last 200ms)
           const now = Date.now();
           const timeSinceLastWheel = now - lastWheelTime;
-          if (isUserScrolling && timeSinceLastWheel < 200) {
-            animationId = requestAnimationFrame(auto);
-            return;
+          
+          if (!isUserScrolling || timeSinceLastWheel >= 200) {
+            // Reset scrolling state if enough time has passed
+            if (timeSinceLastWheel >= 200) {
+              isUserScrolling = false;
+            }
+
+            // Ultra-smooth animation with advanced easing
+            const baseSpeed = speed * startupMultiplier * 0.2; // Ultra-gentle base speed
+            animationProgress += 0.008; // Finer animation steps
+            
+            // Apply advanced easing functions
+            const easeInOutQuart = (t: number) => 
+              t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2;
+            
+            const easedProgress = easeInOutQuart(animationProgress % 1);
+            const smoothSpeed = baseSpeed * (0.7 + easedProgress * 0.6); // Enhanced variable speed
+            
+            // Sub-pixel accumulation for maximum smoothness
+            accumulator += smoothSpeed;
+            
+            // Apply movement with sub-pixel precision
+            if (Math.abs(accumulator) >= 0.01) {
+              currentScrollTop += accumulator;
+              accumulator = 0; // Reset accumulator
+            }
+
+            // Seamless loop handling with floating precision
+            if (currentScrollTop >= half) {
+              currentScrollTop = currentScrollTop - half;
+              animationProgress = 0; // Reset animation on loop
+            }
+
+            // Hardware-accelerated DOM update
+            el.scrollTop = currentScrollTop;
+            lastScrollPosition = currentScrollTop;
           }
-
-          // Reset scrolling state if enough time has passed
-          if (timeSinceLastWheel >= 200) {
-            isUserScrolling = false;
-          }
-
-          // Consistent speed without variations
-          const dynamicSpeed = speed * startupMultiplier;
-          currentScrollTop += dynamicSpeed;
-
-          if (currentScrollTop >= half) {
-            currentScrollTop = 0;
-          }
-
-          // Batch DOM updates
-          el.scrollTop = currentScrollTop;
           
           animationId = requestAnimationFrame(auto);
         };
@@ -176,21 +202,21 @@ useLayoutEffect(() => {
 
   /* ------------------ DATA ------------------ */
   const col1Items = [
-    { type: "image", src: "/images/hero/col-one/1.jpg", link: "/productview/corazon-or-textured", name: "Corazon or Textured" },
-    { type: "video", src: "/images/hero/col-one/2.mp4", link: "/" },
-    { type: "image", src: "/images/hero/col-one/3.jpg", link: "/productview/leather-or-laminate", name: "Leather or Laminate" },
+    { type: "image", src: "https://pub-0fd661f0d30a4344a3b4d291f6516fc2.r2.dev/products/hero-videos/row-one/1.jpg", link: "/productview/corazon-or-textured", name: "Corazon or Textured" },
+    { type: "video", src: "https://pub-0fd661f0d30a4344a3b4d291f6516fc2.r2.dev/products/hero-videos/row-one/2.mp4", link: "/" },
+    { type: "image", src: "https://pub-0fd661f0d30a4344a3b4d291f6516fc2.r2.dev/products/hero-videos/row-one/3.jpg", link: "/productview/leather-or-laminate", name: "Leather or Laminate" },
   ];
 
   const col2Items = [
-    { type: "image", src: "/images/hero/col-two/1.jpg", link: "/productview/lithe-or-leather", name: "Lithe or Leather" },
-    { type: "video", src: "/images/hero/col-two/2.mp4", link: "/" },
-    { type: "image", src: "/images/hero/col-two/3.jpg", link: "/productview/omree-or-laminate", name: "Omree or Laminate" },
+    { type: "image", src: "https://pub-0fd661f0d30a4344a3b4d291f6516fc2.r2.dev/products/hero-videos/row-two/1.jpg", link: "/productview/lithe-or-leather", name: "Lithe or Leather" },
+    { type: "video", src: "https://pub-0fd661f0d30a4344a3b4d291f6516fc2.r2.dev/products/hero-videos/row-two/2.mp4", link: "/" },
+    { type: "image", src: "https://pub-0fd661f0d30a4344a3b4d291f6516fc2.r2.dev/products/hero-videos/row-two/3.jpg", link: "/productview/omree-or-laminate", name: "Omree or Laminate" },
   ];
 
   const col3Items = [
-    { type: "image", src: "/images/hero/col-three/1.jpg", link: "/productview/spectrum-or-laminates", name: "Spectrum or Laminates" },
-    { type: "video", src: "/images/hero/col-three/2.mp4", link: "/" },
-    { type: "image", src: "/images/hero/col-three/3.jpg", link: "/productview/natural-veneer", name: "Natural or Veneer" },
+    { type: "image", src: "https://pub-0fd661f0d30a4344a3b4d291f6516fc2.r2.dev/products/hero-videos/row-three/1.jpg", link: "/productview/spectrum-or-laminates", name: "Spectrum or Laminates" },
+    { type: "video", src: "https://pub-0fd661f0d30a4344a3b4d291f6516fc2.r2.dev/products/hero-videos/row-three/2.mp4", link: "/" },
+    { type: "image", src: "https://pub-0fd661f0d30a4344a3b4d291f6516fc2.r2.dev/products/hero-videos/row-three/3.jpg", link: "/productview/natural-veneer", name: "Natural or Veneer" },
   ];
 
   /* ------------------ RENDER ITEMS ------------------ */
@@ -202,9 +228,9 @@ useLayoutEffect(() => {
       const isInitialLoad = i < 3; // First 3 items are critical
       
       return (
-        <div key={i} className="relative h-screen shrink-0">
+        <div key={i} className="relative h-screen w-full shrink-0">
           {item.type === "image" ? (
-            <div className="text-transparent hover:text-white">
+            <div className="relative h-full w-full text-transparent hover:text-white">
             <Link href={item.link}>
               <h2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-2xl lg:text-3xl z-10 transition-colors duration-300">
                 {item.name}
@@ -222,7 +248,8 @@ useLayoutEffect(() => {
               className="object-cover transform-gpu"
               style={{ 
                 willChange: 'transform',
-                backfaceVisibility: 'hidden'
+                backfaceVisibility: 'hidden',
+                objectFit: 'cover'
               }}
             />
             </Link>
@@ -236,11 +263,12 @@ useLayoutEffect(() => {
               loop
               playsInline
               preload={isInitialLoad ? "metadata" : "none"}
-              className="w-full h-full object-cover transform-gpu"
+              className="absolute inset-0 w-full h-full object-cover transform-gpu"
               style={{ 
                 willChange: 'transform',
                 backfaceVisibility: 'hidden',
-                opacity: isInitialLoad ? 1 : 0.8
+                opacity: isInitialLoad ? 1 : 0.8,
+                objectFit: 'cover'
               }}
               onMouseEnter={() => {
                 const video = videoRef.current;

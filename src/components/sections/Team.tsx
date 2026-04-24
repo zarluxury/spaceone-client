@@ -15,12 +15,6 @@ interface MemberProps {
 const Team: React.FC = () => {
   const managingDirectors: MemberProps[] = [
     { 
-      name: "Mr. Ashok Chheda", 
-      role: "Managing Director", 
-      desc: "The second generation entrepreneur with a keen eye to detail, flawless product development and innovative strategies changed the face of the brand in 30 years making Space One a household name in the industry.", 
-      img: "/images/team/director-1.jpg" 
-    },
-    { 
       name: "Mr. Rajesh Chheda", 
       role: "CFO | Finance Director", 
       desc: "The second generation entrepreneur with his knack for numbers has been instrumental in building the robust base of the empire with his sharp vision and financial strategies scaling the brand manifold in 20 years.", 
@@ -99,37 +93,42 @@ const Team: React.FC = () => {
           </div>
         </motion.section>
 
-        {/* 3. Managing Directors Grid */}
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-slate-900">Leadership Excellence</h2>
-          <div className="mt-2 w-16 h-1 bg-blue-600 mx-auto rounded-full"></div>
-        </div>
+       {/* 3. Managing Directors Grid */}
+<div className="text-center mb-16">
+  <h2 className="text-3xl font-bold text-slate-900">Leadership Excellence</h2>
+  <div className="mt-2 w-16 h-1 bg-blue-600 mx-auto rounded-full"></div>
+</div>
 
-        <section className="grid md:grid-cols-3 gap-10 mb-32">
-          {managingDirectors.map((md, index) => (
-            <motion.div 
-              key={index} 
-              {...fadeIn}
-              transition={{ delay: index * 0.1 }}
-              className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300"
-            >
-              <div className="relative h-80 overflow-hidden">
-                <Image 
-                  src={md.img} 
-                  alt={md.name} 
-                  fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-700" 
-                />
-              </div>
-              <div className="p-8">
-                <h3 className="text-2xl font-bold text-slate-900 mb-1">{md.name}</h3>
-                <p className="text-blue-600 font-semibold text-sm mb-4 uppercase tracking-wide">{md.role}</p>
-                <p className="text-gray-500 leading-relaxed italic">"{md.desc}"</p>
-              </div>
-            </motion.div>
-          ))}
-        </section>
-
+<section className="flex flex-wrap justify-center gap-8 mb-32 max-w-6xl mx-auto px-4">
+  {managingDirectors.map((md, index) => (
+    <motion.div 
+      key={index} 
+      {...fadeIn}
+      transition={{ delay: index * 0.1 }}
+      // Responsive width: full on mobile, fixed width on md screens
+      className="w-full md:w-[350px] group bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-2xl transition-all duration-500"
+    >
+      <div className="relative h-80 overflow-hidden">
+        <Image 
+          src={md.img} 
+          alt={md.name} 
+          fill
+          className="object-cover group-hover:scale-105 transition-transform duration-700" 
+        />
+        {/* Subtle overlay for better text contrast if needed */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      </div>
+      
+      <div className="p-8 text-center">
+        <h3 className="text-2xl font-bold text-slate-900 mb-2">{md.name}</h3>
+        <p className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-medium text-xs uppercase tracking-widest mb-4">
+          {md.role}
+        </p>
+        <p className="text-slate-600 leading-relaxed italic text-sm">"{md.desc}"</p>
+      </div>
+    </motion.div>
+  ))}
+</section>
         {/* 4. Full Team Image Section */}
         <motion.section 
           initial={{ opacity: 0, y: 30 }}

@@ -379,22 +379,22 @@ setProduct(data)
       <div
         className={`overflow-hidden transition-all duration-700 ${
           openSection === section.id
-            ? "max-h-300 opacity-100 pb-4"
-            : "max-h-0 opacity-0"
+            ? "opacity-100 pb-4"
+            : "opacity-0 max-h-0"
         }`}
       >
         {/* FINISHES GRID */}
         {section.id === "finishes" && (
           <div className="space-y-6">
             {/* Get unique finish types from product data */}
-            {product.finishes?.map((finish: Finish) => {
+            {product.finishes?.map((finish: Finish, finishIndex: number) => {
               const finishType = finish.type?.toLowerCase();
               const typeColors = colors.filter((color: any) => color.category === finishType);
               
               if (typeColors.length === 0) return null;
               
               return (
-                <div key={finishType} className="border-b border-gray-100 pb-6 last:border-0">
+                <div key={`finish-${finishType}-${finishIndex}`} className="border-b border-gray-100 pb-6 last:border-0">
                   <p 
                     className={`text-gray-700 mb-4 cursor-pointer hover:text-gray-900 transition-colors capitalize text-lg font-medium ${
                       activeColorCategory === finishType ? 'text-gray-900 font-semibold' : ''
@@ -402,25 +402,26 @@ setProduct(data)
                     onClick={() => setActiveColorCategory(activeColorCategory === finishType ? '' : finishType)}
                   >
                     {finishType} {activeColorCategory === finishType ? '−' : '+'}
-                    <span className="text-sm text-gray-500 font-normal ml-2">({typeColors.length} colors)</span>
-                  </p>
-                  <div className={`grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4 transition-all duration-500 ${
-                    activeColorCategory === finishType ? 'opacity-100 max-h-screen' : 'opacity-0 max-h-0 overflow-hidden'
-                  }`}>
+                    <span className="text-sm text-gray-500 font-normal ml-2">({typeColors.length} Texture)</span>
+                  </p>  
+                  <div className={`grid grid-cols-3 gap-4 transition-all duration-500 ${
+                    activeColorCategory === finishType ? 'opacity-100' : 'opacity-0 max-h-0 overflow-hidden'
+                  }`} style={{
+                    maxHeight: activeColorCategory === finishType ? 'none' : '0'
+                  }}>
                     {typeColors.map((color: any, index: number) => (
                       <Link href={`/finishes/${product._id}/${color.name.replace(/\s+/g, '-')}`} key={`${color.name}-${index}`} className="group cursor-pointer">
-                        <div className="relative w-full aspect-square overflow-hidden rounded-lg border border-gray-200 hover:border-gray-400 transition-colors">
-                          <div className="relative w-full h-full overflow-hidden group">
-                            <Image
-                              src={color.image}
-                              alt={color.name}
-                              fill
-                              sizes="15vw"
-                              className="object-cover scale-[1.4] object-center"
-                            />
-                          </div>
+                        <div className="relative overflow-hidden rounded-lg border border-gray-200 hover:border-gray-400 transition-colors">
+                          <Image
+                            src={color.image}
+                            alt={color.name}
+                            width={200}
+                            height={280}
+                            sizes="22vw"
+                            className="object-cover w-full h-[50rem]"
+                          />
                         </div>
-                        <p className="mt-2 text-xs text-gray-600 hover:text-blue-600 transition-colors capitalize text-center leading-tight">
+                        <p className="mt-2 text-xl text-gray-600 hover:text-blue-600 transition-colors capitalize text-center leading-tight">
                           {color.name}
                         </p>
                       </Link>
@@ -437,8 +438,8 @@ setProduct(data)
           </p>
         )}
         {section.id === "dimensions" && product?.dimensions && (
-          <div className="w-full flex justify-center items-center py-2">
-  <div className="w-[90%] sm:w-[60%] md:w-[40%] lg:w-[28%] ">
+          <div className="w-full flex justify-center items-center py-1">
+  <div className="w-[60%] sm:w-[40%] md:w-[30%] lg:w-[20%] max-w-xs">
     <svg
       viewBox="0 0 200 200"
       className="w-full h-auto"
@@ -481,7 +482,7 @@ setProduct(data)
           <div className="flex flex-col gap-4 text-lg">
             {product.downloads?.map((download: any, index: number) => (
               <div 
-                key={index}
+                key={`download-${download.title}-${index}`}
                 onClick={() => handleDownload(download.file, download.title, product._id, product.name)}
                 className="underline hover:text-blue-600 cursor-pointer"
               >
@@ -503,10 +504,10 @@ setProduct(data)
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 w-full h-[80vh]">
     {/* Related products only - exclude current product */}
     {relatedProducts.map((relatedProduct: any, index: number) => (
-      <Link href={`/productview/${relatedProduct.slug}`} key={index}>
+      <Link href={`/productview/${relatedProduct.slug}`} key={`related-${relatedProduct._id}-${index}`}>
         <div className="relative w-full h-full overflow-hidden group cursor-pointer">
           <Image
-            src={relatedProduct.heroImage}
+            src={relatedProduct.sliderImages?.[0] || relatedProduct.heroImage}
             alt={relatedProduct.name}
             fill
             sizes="(max-width: 768px) 100vw, 33vw"
